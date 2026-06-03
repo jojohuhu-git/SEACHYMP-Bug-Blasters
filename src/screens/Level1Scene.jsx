@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { ORGANISMS, monogramFor } from "../data/organisms.js";
+import { ORGANISMS, monogramOf } from "../data/organisms.js";
 import { GameState } from "../logic/gameState.js";
 import { MutationTracker } from "../logic/mutation.js";
 import { getReefStage } from "../data/progression.js";
@@ -89,7 +89,7 @@ function drawOrganism(ctx, org, x, y, radius, mutated) {
   }
 
   // Monogram label (1–2 chars derived from name — no emoji)
-  const monogram = monogramFor(org.name);
+  const monogram = monogramOf(org);
   ctx.save();
   ctx.font = `bold ${Math.round(r * 0.75)}px 'Segoe UI', sans-serif`;
   ctx.textAlign = "center";

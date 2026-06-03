@@ -21,12 +21,22 @@ export function monogramFor(name) {
   return (String(name).replace(/[^A-Za-z]/g, "").slice(0, 2) || "??").toUpperCase();
 }
 
+/**
+ * monogramOf — placeholder-art monogram for an organism object. Honors an
+ * explicit `monogram` override (used to disambiguate look-alike names that
+ * would otherwise share initials, e.g. Enterobacter cloacae vs E. coli),
+ * otherwise derives from the name.
+ */
+export function monogramOf(org) {
+  return (org && org.monogram) || monogramFor(org ? org.name : "");
+}
+
 export const ORGANISMS = [
   // ── SEACHYMP organisms ─────────────────────────────────────────────────────
 
   {
     id: "serratia",
-    name: "Serratia",
+    name: "Serratia marcescens",
     species: "Serratia marcescens",
     isSeachymp: true,
     bonus: false,
@@ -43,7 +53,7 @@ export const ORGANISMS = [
 
   {
     id: "enterobacter",
-    name: "Enterobacter",
+    name: "Enterobacter cloacae",
     species: "Enterobacter cloacae",
     isSeachymp: true,
     bonus: false,
@@ -60,7 +70,7 @@ export const ORGANISMS = [
 
   {
     id: "aeromonas",
-    name: "Aeromonas",
+    name: "Aeromonas hydrophila",
     species: "Aeromonas hydrophila",
     isSeachymp: true,
     bonus: false,
@@ -77,7 +87,7 @@ export const ORGANISMS = [
 
   {
     id: "citrobacter",
-    name: "Citrobacter",
+    name: "Citrobacter freundii",
     species: "Citrobacter freundii",
     isSeachymp: true,
     bonus: false,
@@ -94,7 +104,7 @@ export const ORGANISMS = [
 
   {
     id: "hafnia",
-    name: "Hafnia",
+    name: "Hafnia alvei",
     species: "Hafnia alvei",
     isSeachymp: true,
     bonus: false,
@@ -111,7 +121,7 @@ export const ORGANISMS = [
 
   {
     id: "yersinia",
-    name: "Yersinia",
+    name: "Yersinia enterocolitica",
     species: "Yersinia enterocolitica",
     isSeachymp: true,
     bonus: false,
@@ -128,7 +138,7 @@ export const ORGANISMS = [
 
   {
     id: "morganella",
-    name: "Morganella",
+    name: "Morganella morganii",
     species: "Morganella morganii",
     isSeachymp: true,
     bonus: false,
@@ -145,7 +155,7 @@ export const ORGANISMS = [
 
   {
     id: "providencia",
-    name: "Providencia",
+    name: "Providencia stuartii",
     species: "Providencia stuartii",
     isSeachymp: true,
     bonus: false,
@@ -255,6 +265,7 @@ export const ORGANISMS = [
     id: "ecoli",
     name: "E. coli",
     species: "Escherichia coli",
+    monogram: "Eco",
     isSeachymp: false,
     bonus: false,
     riskTier: null,
@@ -410,6 +421,7 @@ export const ORGANISMS = [
     id: "efaecium",
     name: "Enterococcus faecium",
     species: "Enterococcus faecium",
+    monogram: "Efm",
     isSeachymp: false,
     bonus: false,
     riskTier: null,
