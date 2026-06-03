@@ -6,6 +6,21 @@
  *   uses `emoji` + `color` from this file.
  */
 
+/**
+ * monogramFor — derive a short placeholder-art monogram from an organism name.
+ * Uses the first letter of the first two words (genus + species) so binomial
+ * names stay distinct ("Klebsiella pneumoniae" -> "KP", "Klebsiella oxytoca"
+ * -> "KO"). Falls back to the first two letters for single-word names.
+ */
+export function monogramFor(name) {
+  const words = String(name).trim().split(/\s+/).filter(Boolean);
+  const letters = words
+    .map((w) => (w.match(/[A-Za-z]/) || [""])[0])
+    .filter(Boolean);
+  if (letters.length >= 2) return (letters[0] + letters[1]).toUpperCase();
+  return (String(name).replace(/[^A-Za-z]/g, "").slice(0, 2) || "??").toUpperCase();
+}
+
 export const ORGANISMS = [
   // ── SEACHYMP organisms ─────────────────────────────────────────────────────
 
@@ -232,6 +247,180 @@ export const ORGANISMS = [
       "Not a SEACHYMP target! Many crabs are harmless. Reserve interventions for the right organisms.",
     blurb:
       "A small, cheerful crab waving its claws in a friendly way. Not a SEACHYMP organism — don't treat what you don't need to.",
+  },
+
+  // ── Non-AmpC gram-negative distractors (Enterobacterales, not the SEACHYMP group) ──
+
+  {
+    id: "ecoli",
+    name: "E. coli",
+    species: "Escherichia coli",
+    isSeachymp: false,
+    bonus: false,
+    riskTier: null,
+    artToken: "reef-minnow",
+    color: "#6fae6f",
+    emoji: "🐟",
+    difficulty: "easy",
+    teachingPoint:
+      "Escherichia coli is not a chromosomal AmpC producer of the SEACHYMP type. Treat per susceptibilities; it does not carry the inducible-AmpC de-repression concern.",
+    blurb:
+      "A quick little reef minnow flitting through the shallows. A common gram-negative — but not one of the inducible-AmpC group you're patrolling for.",
+  },
+
+  {
+    id: "kpneumoniae",
+    name: "Klebsiella pneumoniae",
+    species: "Klebsiella pneumoniae",
+    isSeachymp: false,
+    bonus: false,
+    riskTier: null,
+    artToken: "puffer-minnow",
+    color: "#5a9bd4",
+    emoji: "🐡",
+    difficulty: "easy",
+    teachingPoint:
+      "Klebsiella pneumoniae is not an inducible chromosomal AmpC producer (distinct from K. aerogenes). Resistance concerns are ESBL/carbapenemase, not de-repression.",
+    blurb:
+      "A plump blue reef fish drifting calmly past the coral. Not part of the inducible-AmpC group — don't confuse it with its cousin K. aerogenes.",
+  },
+
+  {
+    id: "koxytoca",
+    name: "Klebsiella oxytoca",
+    species: "Klebsiella oxytoca",
+    isSeachymp: false,
+    bonus: false,
+    riskTier: null,
+    artToken: "ribbon-fish",
+    color: "#5ac4c4",
+    emoji: "🐟",
+    difficulty: "easy",
+    teachingPoint:
+      "Klebsiella oxytoca is not an inducible chromosomal AmpC producer of the SEACHYMP type. It carries a chromosomal class A beta-lactamase, not the AmpC de-repression risk.",
+    blurb:
+      "A slender teal ribbon-fish weaving lazily through the water. A look-alike that is not one of your inducible-AmpC targets.",
+  },
+
+  {
+    id: "ckoseri",
+    name: "Citrobacter koseri",
+    species: "Citrobacter koseri",
+    isSeachymp: false,
+    bonus: false,
+    riskTier: null,
+    artToken: "spotted-goby",
+    color: "#c49a6c",
+    emoji: "🐠",
+    difficulty: "easy",
+    teachingPoint:
+      "Citrobacter koseri is NOT a high-risk inducible-AmpC producer (unlike C. freundii). An easy trap — the genus matters less than the species here.",
+    blurb:
+      "A sandy spotted goby resting on a ledge, watching the current. Despite the Citrobacter name, this one is not a high-risk AmpC organism like C. freundii.",
+  },
+
+  {
+    id: "pmirabilis",
+    name: "Proteus mirabilis",
+    species: "Proteus mirabilis",
+    isSeachymp: false,
+    bonus: false,
+    riskTier: null,
+    artToken: "darting-wrasse",
+    color: "#d98cb3",
+    emoji: "🐟",
+    difficulty: "easy",
+    teachingPoint:
+      "Proteus mirabilis does not carry inducible chromosomal AmpC. It is intrinsically resistant to a few agents but is not part of the de-repression group.",
+    blurb:
+      "A pink wrasse darting in restless zig-zags across the reef. Not an inducible-AmpC organism — leave it to swim.",
+  },
+
+  {
+    id: "ppenneri",
+    name: "Proteus penneri",
+    species: "Proteus penneri",
+    isSeachymp: false,
+    bonus: false,
+    riskTier: null,
+    artToken: "sand-eel",
+    color: "#b08a5a",
+    emoji: "🐍",
+    difficulty: "easy",
+    teachingPoint:
+      "Proteus penneri is not an inducible chromosomal AmpC producer of the SEACHYMP type. Treat per susceptibilities.",
+    blurb:
+      "A tan sand-eel half-buried in the seabed, barely stirring. Another Proteus that is not one of your inducible-AmpC targets.",
+  },
+
+  // ── Gram-positive distractors (wrong kingdom entirely) ────────────────────
+
+  {
+    id: "efaecalis",
+    name: "Enterococcus faecalis",
+    species: "Enterococcus faecalis",
+    isSeachymp: false,
+    bonus: false,
+    riskTier: null,
+    artToken: "round-anemone",
+    color: "#cf5a8a",
+    emoji: "🌸",
+    difficulty: "easy",
+    teachingPoint:
+      "Enterococcus faecalis is a gram-POSITIVE organism — AmpC has nothing to do with it. A pure distractor.",
+    blurb:
+      "A round rosy anemone swaying gently on a rock. A gram-positive bystander — AmpC stewardship doesn't apply here at all.",
+  },
+
+  {
+    id: "saureus",
+    name: "Staphylococcus aureus",
+    species: "Staphylococcus aureus",
+    isSeachymp: false,
+    bonus: false,
+    riskTier: null,
+    artToken: "golden-cluster-coral",
+    color: "#e0b020",
+    emoji: "🪸",
+    difficulty: "easy",
+    teachingPoint:
+      "Staphylococcus aureus is a gram-POSITIVE coccus in clusters — no AmpC involvement. A pure distractor.",
+    blurb:
+      "A cluster of golden coral polyps catching the light. Gram-positive and entirely off your AmpC patrol list.",
+  },
+
+  {
+    id: "spneumoniae",
+    name: "Streptococcus pneumoniae",
+    species: "Streptococcus pneumoniae",
+    isSeachymp: false,
+    bonus: false,
+    riskTier: null,
+    artToken: "twin-shell-mollusk",
+    color: "#7a6fc4",
+    emoji: "🐚",
+    difficulty: "easy",
+    teachingPoint:
+      "Streptococcus pneumoniae is a gram-POSITIVE diplococcus — no AmpC involvement. A pure distractor.",
+    blurb:
+      "A pair of violet shells nestled together on the sand. Gram-positive — nothing to do with the inducible-AmpC creatures you're after.",
+  },
+
+  {
+    id: "efaecium",
+    name: "Enterococcus faecium",
+    species: "Enterococcus faecium",
+    isSeachymp: false,
+    bonus: false,
+    riskTier: null,
+    artToken: "round-anemone-violet",
+    color: "#a05ac4",
+    emoji: "🌸",
+    difficulty: "easy",
+    teachingPoint:
+      "Enterococcus faecium is a gram-POSITIVE organism — no AmpC relevance. A pure distractor.",
+    blurb:
+      "A violet anemone with slow, drifting tendrils. Another gram-positive bystander outside your AmpC stewardship scope.",
   },
 ];
 

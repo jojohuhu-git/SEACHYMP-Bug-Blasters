@@ -1,3 +1,4 @@
+import { monogramFor } from "../data/organisms.js";
 import "./InfoCard.css";
 
 export default function InfoCard({ org, mutated, onDecide, onClose, alreadyInEncyclopedia }) {
@@ -12,7 +13,7 @@ export default function InfoCard({ org, mutated, onDecide, onClose, alreadyInEnc
 
   // Colored shape placeholder art — no emoji
   const artBg = (org.color || "#38b2e8") + "22";
-  const monogram = org.name.slice(0, 2).toUpperCase();
+  const monogram = monogramFor(org.name);
 
   return (
     <div className="info-overlay" role="dialog" aria-modal="true" aria-label={`Info card: ${org.name}`}>

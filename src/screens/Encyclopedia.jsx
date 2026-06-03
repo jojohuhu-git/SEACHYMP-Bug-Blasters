@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { ORGANISMS } from "../data/organisms.js";
+import { ORGANISMS, monogramFor } from "../data/organisms.js";
 import { GameState } from "../logic/gameState.js";
 import "./Encyclopedia.css";
 
@@ -47,7 +47,7 @@ export default function Encyclopedia({ onBack }) {
                             color: org.color || "#38b2e8",
                           }}
                         >
-                          {org.name.slice(0, 2).toUpperCase()}
+                          {monogramFor(org.name)}
                         </div>
                         <div>
                           <div className="enc-name">{org.name}</div>
