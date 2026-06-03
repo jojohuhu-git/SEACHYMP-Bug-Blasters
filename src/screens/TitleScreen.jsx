@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import "./TitleScreen.css";
 
-export default function TitleScreen({ onPlay, onPlayLevel2, onHowToPlay, onEncyclopedia, onReef, onWeapons }) {
+export default function TitleScreen({ onPlay, onPlayLevel2, onPlayLevel3, onHowToPlay, onEncyclopedia, onReef, onWeapons }) {
   useEffect(() => {
     document.body.classList.remove("scroll-mode");
   }, []);
@@ -51,6 +51,9 @@ export default function TitleScreen({ onPlay, onPlayLevel2, onHowToPlay, onEncyc
           </button>
           <button className="btn-primary title-btn-level2" onClick={onPlayLevel2}>
             Level 2 — Weapon Match
+          </button>
+          <button className="btn-primary title-btn-level3" onClick={onPlayLevel3}>
+            Level 3 — Stewardship Challenge
           </button>
           <button className="btn-secondary" onClick={onHowToPlay}>
             How to Play

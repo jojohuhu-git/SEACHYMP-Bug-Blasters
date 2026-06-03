@@ -7,6 +7,7 @@ import SquadSelect from "./screens/SquadSelect.jsx";
 import HowToPlay from "./screens/HowToPlay.jsx";
 import Level1Scene from "./screens/Level1Scene.jsx";
 import Level2Scene from "./screens/Level2Scene.jsx";
+import Level3Scene from "./screens/Level3Scene.jsx";
 import InGameMenu from "./screens/InGameMenu.jsx";
 import Encyclopedia from "./screens/Encyclopedia.jsx";
 import MyReef from "./screens/MyReef.jsx";
@@ -22,6 +23,7 @@ const SCREENS = {
   HOW_TO_PLAY: "how_to_play",
   LEVEL1: "level1",
   LEVEL2: "level2",
+  LEVEL3: "level3",
   IN_GAME_MENU: "in_game_menu",
   ENCYCLOPEDIA: "encyclopedia",
   REEF: "reef",
@@ -56,10 +58,17 @@ export default function App() {
 
   function handlePlayLevel2() {
     if (!chymp) {
-      // Temporarily store intent then redirect to squad select
       go(SCREENS.SQUAD);
     } else {
       go(SCREENS.LEVEL2);
+    }
+  }
+
+  function handlePlayLevel3() {
+    if (!chymp) {
+      go(SCREENS.SQUAD);
+    } else {
+      go(SCREENS.LEVEL3);
     }
   }
 
@@ -95,6 +104,7 @@ export default function App() {
         <TitleScreen
           onPlay={handlePlay}
           onPlayLevel2={handlePlayLevel2}
+          onPlayLevel3={handlePlayLevel3}
           onHowToPlay={() => { setPrevScreen(SCREENS.TITLE); go(SCREENS.HOW_TO_PLAY); }}
           onEncyclopedia={() => { setPrevScreen(SCREENS.TITLE); go(SCREENS.ENCYCLOPEDIA); }}
           onReef={() => { setPrevScreen(SCREENS.TITLE); go(SCREENS.REEF); }}
@@ -128,6 +138,13 @@ export default function App() {
       return (
         <>
           <Level2Scene chymp={chymp} onMenu={() => go(SCREENS.TITLE)} />
+        </>
+      );
+
+    case SCREENS.LEVEL3:
+      return (
+        <>
+          <Level3Scene chymp={chymp} onMenu={() => go(SCREENS.TITLE)} />
         </>
       );
 

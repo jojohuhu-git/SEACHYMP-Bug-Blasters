@@ -150,6 +150,22 @@
   transform: translateY(-1px);
 }
 
+/* Level 3 button — indigo/violet accent, distinct from L1 (cyan) and L2 (teal) */
+.title-btn-level3 {
+  width: 100%;
+  font-size: 1.05rem;
+  padding: 14px 28px;
+  background: rgba(45, 20, 96, 0.85);
+  color: var(--text);
+  border: 1.5px solid #8b5cf6;
+}
+
+.title-btn-level3:hover {
+  background: rgba(60, 30, 120, 0.95);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.35);
+  transform: translateY(-1px);
+}
+
 .title-buttons .btn-secondary {
   width: 100%;
 }

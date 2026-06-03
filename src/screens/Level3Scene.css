@@ -1,0 +1,394 @@
+/* Level3Scene — Stewardship Challenge canvas wrap + case card overlay */
+
+.level3-wrap {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.level3-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+/* ── Case Card Overlay ── */
+
+.l3-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 8, 28, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+  overflow-y: auto;
+}
+
+.l3-card {
+  background: #120d2b;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: var(--rad);
+  width: 100%;
+  max-width: 560px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  animation: l3CardIn 0.2s ease;
+}
+
+@keyframes l3CardIn {
+  from { transform: scale(0.93) translateY(14px); opacity: 0; }
+  to   { transform: scale(1)    translateY(0);    opacity: 1; }
+}
+
+/* Header */
+.l3-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 16px 14px;
+  border-top: 4px solid var(--accent);
+  position: relative;
+}
+
+.l3-art {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--rads);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.l3-art-mono {
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.l3-mutated-tag {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ef4444;
+  color: white;
+  font-size: 0.5rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 2px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.l3-title-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.l3-name {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.l3-species {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.l3-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  font-size: 1.3rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+}
+
+.l3-close:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--text);
+}
+
+/* Case context block */
+.l3-context-block {
+  padding: 0 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.l3-blurb {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.l3-case-table {
+  background: rgba(139, 92, 246, 0.07);
+  border: 1px solid rgba(139, 92, 246, 0.18);
+  border-radius: var(--rads);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.l3-case-row {
+  display: flex;
+  gap: 8px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.l3-case-label {
+  color: var(--text-dim);
+  min-width: 110px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.l3-case-value {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.l3-mutation-warn {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--high-risk);
+  border-radius: var(--rads);
+  padding: 10px 12px;
+  font-size: 0.86rem;
+  color: #fca5a5;
+  line-height: 1.5;
+}
+
+/* Weapons section */
+.l3-weapons-section {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.l3-weapons-prompt {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.l3-weapons-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.l3-weapon-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 4px solid transparent;
+  border-radius: var(--rads);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.14s;
+  text-align: left;
+  min-height: var(--tap-min);
+  width: 100%;
+}
+
+.l3-weapon-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.l3-weapon-shape {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--rads);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.l3-weapon-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.l3-weapon-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.l3-weapon-nick {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.l3-weapon-cue {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.l3-release-btn {
+  background: transparent;
+  color: var(--neutral);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 10px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: var(--rads);
+  cursor: pointer;
+  transition: background 0.14s;
+  min-height: var(--tap-min);
+  text-align: left;
+}
+
+.l3-release-btn:hover {
+  background: rgba(148, 163, 184, 0.1);
+  border-color: var(--neutral);
+}
+
+/* Result panel */
+.l3-result {
+  margin: 0 16px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--rads);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.l3-result--correct {
+  border-color: var(--low-risk);
+  background: rgba(34, 197, 94, 0.05);
+}
+
+.l3-result--incorrect {
+  border-color: var(--high-risk);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.l3-result--neutral {
+  border-color: var(--bonus);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.l3-result-heading {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.l3-result-rationale {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.l3-result-reveal {
+  font-size: 0.84rem;
+}
+
+.l3-reveal {
+  font-weight: 600;
+}
+
+.l3-reveal--high  { color: #fca5a5; }
+.l3-reveal--low   { color: var(--low-risk); }
+.l3-reveal--bonus { color: var(--bonus); }
+.l3-reveal--neutral { color: var(--neutral); }
+
+.l3-continue-btn {
+  margin-top: 4px;
+  align-self: flex-start;
+}
+
+/* Level 3 Complete Overlay (mirrors patrol-overlay style) */
+.l3-complete-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 8, 28, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 16px;
+  backdrop-filter: blur(6px);
+}
+
+.l3-complete-card {
+  background: #120d2b;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  border-radius: var(--rad);
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  animation: l3CardIn 0.25s ease;
+}
+
+.l3-complete-header {
+  padding: 20px 20px 0;
+  border-top: 4px solid #8b5cf6;
+}
+
+.l3-complete-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.l3-complete-body {
+  padding: 14px 20px 4px;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.l3-complete-actions {
+  padding: 16px 20px 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .l3-card { max-width: 100%; }
+  .l3-name { font-size: 1.05rem; }
+  .l3-weapon-btn { padding: 9px 10px; }
+  .l3-case-label { min-width: 90px; }
+}

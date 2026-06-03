@@ -16,6 +16,9 @@ const KEYS = {
   IDENTIFIED_TARGETS: "bugblasters_identified_targets",
   L2_TREATED: "bugblasters_l2_treated",        // Set of organism type ids correctly treated in L2
   L2_CEFEPIME_COUNT: "bugblasters_l2_cefepime", // number of correct Cefepime choices
+  // Level 3 — Stewardship Challenge
+  L3_RESOLVED: "bugblasters_l3_resolved",       // Set of organism type ids correctly resolved in L3
+  L3_SOURCE_CTRL: "bugblasters_l3_src_ctrl",    // number of source-control cases correctly resolved
 };
 
 function load(key, fallback) {
@@ -132,6 +135,31 @@ export const GameState = {
   incrementL2CefepimeCount() {
     const n = GameState.getL2CefepimeCount() + 1;
     save(KEYS.L2_CEFEPIME_COUNT, n);
+    return n;
+  },
+
+  // ── Level 3 — correctly resolved organism types ───────────────────────────
+  getL3Resolved() {
+    const arr = load(KEYS.L3_RESOLVED, []);
+    return new Set(arr);
+  },
+  addL3Resolved(organismId) {
+    const set = GameState.getL3Resolved();
+    set.add(organismId);
+    save(KEYS.L3_RESOLVED, [...set]);
+    return set;
+  },
+  hasL3Resolved(organismId) {
+    return GameState.getL3Resolved().has(organismId);
+  },
+
+  // ── Level 3 — source-control specialist badge tracking ────────────────────
+  getL3SourceCtrlCount() {
+    return load(KEYS.L3_SOURCE_CTRL, 0);
+  },
+  incrementL3SourceCtrlCount() {
+    const n = GameState.getL3SourceCtrlCount() + 1;
+    save(KEYS.L3_SOURCE_CTRL, n);
     return n;
   },
 
