@@ -1,0 +1,303 @@
+/* Level2Scene — canvas wrap + weapon choice card overlay */
+
+.level2-wrap {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.level2-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+/* ── Weapon Choice Overlay ── */
+
+.l2-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 20, 48, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+  overflow-y: auto;
+}
+
+.l2-card {
+  background: #0f2545;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--rad);
+  width: 100%;
+  max-width: 540px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  animation: cardIn 0.2s ease;
+}
+
+@keyframes cardIn {
+  from { transform: scale(0.92) translateY(16px); opacity: 0; }
+  to   { transform: scale(1)    translateY(0);    opacity: 1; }
+}
+
+/* Header */
+.l2-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 16px 16px;
+  border-top: 4px solid var(--accent);
+  position: relative;
+}
+
+.l2-art {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--rads);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.l2-art-mono {
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.l2-mutated-tag {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ef4444;
+  color: white;
+  font-size: 0.5rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 2px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.l2-title-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.l2-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.l2-species {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.l2-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  font-size: 1.3rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+}
+
+.l2-close:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--text);
+}
+
+/* Blurb block */
+.l2-blurb-block {
+  padding: 0 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.l2-blurb {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.l2-mutation-warn {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--high-risk);
+  border-radius: var(--rads);
+  padding: 10px 12px;
+  font-size: 0.86rem;
+  color: #fca5a5;
+  line-height: 1.5;
+}
+
+/* Weapons section */
+.l2-weapons-section {
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.l2-weapons-prompt {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding-top: 12px;
+}
+
+.l2-weapons-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.l2-weapon-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 4px solid transparent;
+  border-radius: var(--rads);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s;
+  text-align: left;
+  min-height: var(--tap-min);
+  width: 100%;
+}
+
+.l2-weapon-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.l2-weapon-shape {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--rads);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.l2-weapon-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.l2-weapon-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.l2-weapon-nick {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.l2-weapon-cue {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.l2-release-btn {
+  background: transparent;
+  color: var(--neutral);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 10px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: var(--rads);
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s;
+  min-height: var(--tap-min);
+  text-align: left;
+}
+
+.l2-release-btn:hover {
+  background: rgba(148, 163, 184, 0.1);
+  border-color: var(--neutral);
+}
+
+/* Result panel */
+.l2-result {
+  margin: 0 16px 16px;
+  border: 1px solid var(--low-risk);
+  border-radius: var(--rads);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.l2-result-heading {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.l2-result-feedback {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.l2-result-reveal {
+  font-size: 0.84rem;
+}
+
+.l2-reveal {
+  font-weight: 600;
+}
+
+.l2-reveal--high {
+  color: #fca5a5;
+}
+
+.l2-reveal--low {
+  color: var(--low-risk);
+}
+
+.l2-reveal--neutral {
+  color: var(--neutral);
+}
+
+.l2-continue-btn {
+  margin-top: 4px;
+  align-self: flex-start;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .l2-card { max-width: 100%; }
+  .l2-name { font-size: 1.1rem; }
+  .l2-weapon-btn { padding: 9px 10px; }
+}

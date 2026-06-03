@@ -14,6 +14,8 @@ const KEYS = {
   BADGES: "bugblasters_badges",
   PROGRESS: "bugblasters_progress",
   IDENTIFIED_TARGETS: "bugblasters_identified_targets",
+  L2_TREATED: "bugblasters_l2_treated",        // Set of organism type ids correctly treated in L2
+  L2_CEFEPIME_COUNT: "bugblasters_l2_cefepime", // number of correct Cefepime choices
 };
 
 function load(key, fallback) {
@@ -106,6 +108,31 @@ export const GameState = {
   },
   resetIdentifiedTargets() {
     save(KEYS.IDENTIFIED_TARGETS, []);
+  },
+
+  // ── Level 2 — correctly treated organism types ───────────────────────────
+  getL2Treated() {
+    const arr = load(KEYS.L2_TREATED, []);
+    return new Set(arr);
+  },
+  addL2Treated(organismId) {
+    const set = GameState.getL2Treated();
+    set.add(organismId);
+    save(KEYS.L2_TREATED, [...set]);
+    return set;
+  },
+  hasL2Treated(organismId) {
+    return GameState.getL2Treated().has(organismId);
+  },
+
+  // ── Level 2 — Cefepime Commander badge tracking ──────────────────────────
+  getL2CefepimeCount() {
+    return load(KEYS.L2_CEFEPIME_COUNT, 0);
+  },
+  incrementL2CefepimeCount() {
+    const n = GameState.getL2CefepimeCount() + 1;
+    save(KEYS.L2_CEFEPIME_COUNT, n);
+    return n;
   },
 
   // ── Full reset ────────────────────────────────────────────────────────────

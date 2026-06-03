@@ -131,8 +131,23 @@
 
 .title-btn-play {
   width: 100%;
-  font-size: 1.15rem;
-  padding: 16px 28px;
+  font-size: 1.05rem;
+  padding: 14px 28px;
+}
+
+.title-btn-level2 {
+  width: 100%;
+  font-size: 1.05rem;
+  padding: 14px 28px;
+  background: var(--ocean-mid);
+  color: var(--text);
+  border: 1.5px solid var(--accent);
+}
+
+.title-btn-level2:hover {
+  background: rgba(13, 59, 110, 0.9);
+  box-shadow: var(--glow);
+  transform: translateY(-1px);
 }
 
 .title-buttons .btn-secondary {

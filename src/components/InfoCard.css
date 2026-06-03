@@ -252,6 +252,52 @@
   min-width: 120px;
 }
 
+/* Post-decision result block */
+.info-result {
+  border-radius: var(--rads);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.info-result--correct {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid var(--low-risk);
+}
+
+.info-result--wrong {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid var(--high-risk);
+}
+
+.info-result-verdict {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.info-result-reveal {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.info-reveal {
+  font-weight: 600;
+}
+
+.info-reveal--high {
+  color: #fca5a5;
+}
+
+.info-reveal--low {
+  color: var(--low-risk);
+}
+
+.info-reveal--neutral {
+  color: var(--neutral);
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .info-card { max-width: 100%; }
