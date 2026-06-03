@@ -27,7 +27,20 @@
   gap: 16px;
 }
 
-.reef-stage-emoji { font-size: 3rem; line-height: 1; }
+/* Colored shape for stage display */
+.reef-stage-shape {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--rads);
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+}
 
 .reef-stage-name {
   font-size: 1.3rem;
@@ -68,7 +81,21 @@
   background: rgba(56,178,232,0.08);
 }
 
-.reef-step-emoji { font-size: 1.3rem; width: 28px; text-align: center; }
+/* Colored shape for stage steps */
+.reef-step-shape {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radxs);
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  color: var(--text-dim);
+}
 .reef-step-label { flex: 1; font-weight: 600; color: var(--text); }
 .reef-step-req { font-size: 0.75rem; color: var(--text-dim); }
 .reef-step-you { font-size: 0.75rem; color: var(--accent); font-weight: 600; }
@@ -125,7 +152,26 @@
   opacity: 0.4;
 }
 
-.reef-badge-emoji { font-size: 1.8rem; }
+/* Colored shape for badges */
+.reef-badge-shape {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--rads);
+  background: rgba(56,178,232,0.12);
+  border: 1px solid rgba(56,178,232,0.3);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.reef-badge--earned .reef-badge-shape {
+  background: rgba(56,178,232,0.2);
+  border-color: var(--accent);
+}
 
 .reef-badge-name {
   font-size: 0.85rem;

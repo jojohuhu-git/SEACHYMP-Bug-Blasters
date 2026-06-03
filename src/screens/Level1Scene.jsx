@@ -14,6 +14,12 @@ const ORG_RADIUS_BASE = 24;
 const CAPTURE_DIST = 70;   // pixels — proximity for keyboard capture
 const ORBIT_COUNT = 8;     // drift organisms to show at once (mix of SEACHYMP + distractors)
 
+// The complete set of SEACHYMP targets that must be correctly identified
+// to complete the patrol (all isSeachymp organisms, including the bonus).
+const SEACHYMP_TARGET_IDS = ORGANISMS
+  .filter((o) => o.isSeachymp)
+  .map((o) => o.id);
+
 // Mix of SEACHYMP + distractor organisms for Level 1 pool
 const LEVEL1_POOL = [
   ...ORGANISMS.filter((o) => o.isSeachymp).slice(0, 8), // core SEACHYMP
@@ -35,16 +41,15 @@ function randomOrganisms(canvasW, canvasH) {
     vx: (Math.random() - 0.5) * 0.8,
     vy: (Math.random() - 0.5) * 0.8,
     bobOffset: Math.random() * Math.PI * 2,
-    captureAnim: 0, // 0–1 pulse animation
+    captureAnim: 0,
     id_instance: `${org.id}_${i}`,
     mutated: false,
   }));
 }
 
-// ── Placeholder art renderer ──────────────────────────────────────────────────
-// Art is driven by organism.artToken and organism.color so real SVG art can
-// be swapped in here later without touching gameplay code.
-// TODO: sound — play organism hover sound
+// ── Colored-shape placeholder art renderer ────────────────────────────────────
+// Uses organism.color and organism.name initial(s) — no emoji.
+// Real SVG art can be swapped in later via organism.artToken.
 function drawOrganism(ctx, org, x, y, radius, mutated) {
   const col = mutated ? darkenHex(org.color, 0.45) : org.color;
   const r = mutated ? radius * 1.2 : radius;
@@ -54,10 +59,10 @@ function drawOrganism(ctx, org, x, y, radius, mutated) {
   ctx.shadowColor = mutated ? "#ef4444" : col;
   ctx.shadowBlur = mutated ? 18 : 10;
 
-  // Body circle
+  // Body circle (colored shape)
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.fillStyle = col + "33"; // semi-transparent fill
+  ctx.fillStyle = col + "44";
   ctx.fill();
   ctx.strokeStyle = col;
   ctx.lineWidth = mutated ? 3 : 2;
@@ -83,12 +88,15 @@ function drawOrganism(ctx, org, x, y, radius, mutated) {
     ctx.restore();
   }
 
-  // Emoji label (placeholder art)
+  // Monogram label (1–2 chars derived from name — no emoji)
+  const monogram = org.name.slice(0, 2).toUpperCase();
   ctx.save();
-  ctx.font = `${Math.round(r * 1.1)}px serif`;
+  ctx.font = `bold ${Math.round(r * 0.75)}px 'Segoe UI', sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(org.emoji, x, y);
+  ctx.fillStyle = col;
+  ctx.globalAlpha = mutated ? 0.9 : 0.8;
+  ctx.fillText(monogram, x, y);
   ctx.restore();
 
   // Name label below
@@ -113,15 +121,17 @@ function drawOrganism(ctx, org, x, y, radius, mutated) {
   }
 }
 
-function drawPlayer(ctx, chymp, x, y, facingRight) {
+function drawPlayer(ctx, chymp, x, y, _facingRight) {
   const r = PLAYER_RADIUS;
   const color = chymp?.color || "#38b2e8";
+  // Monogram from chymp name
+  const mono = chymp?.name ? chymp.name.slice(0, 2).toUpperCase() : "CH";
 
   ctx.save();
   ctx.shadowColor = color;
   ctx.shadowBlur = 14;
 
-  // Body
+  // Body circle
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fillStyle = color + "55";
@@ -132,17 +142,14 @@ function drawPlayer(ctx, chymp, x, y, facingRight) {
 
   ctx.restore();
 
-  // Emoji
+  // Monogram
   ctx.save();
-  ctx.font = `${r * 1.3}px serif`;
+  ctx.font = `bold ${Math.round(r * 0.8)}px 'Segoe UI', sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  if (!facingRight) {
-    ctx.scale(-1, 1);
-    ctx.fillText(chymp?.emoji || "🐵", -x, y);
-  } else {
-    ctx.fillText(chymp?.emoji || "🐵", x, y);
-  }
+  ctx.fillStyle = color;
+  ctx.globalAlpha = 0.9;
+  ctx.fillText(mono, x, y);
   ctx.restore();
 }
 
@@ -209,6 +216,13 @@ export default function Level1Scene({ chymp, onMenu }) {
   const [mutationBanner, setMutationBanner] = useState(null); // banner text
   const [identified, setIdentified] = useState(() => GameState.getProgress().identifiedCount);
   const [reefStage, setReefStage] = useState(() => getReefStage(GameState.getProgress().identifiedCount));
+  // Track which SEACHYMP target ids have been correctly identified this patrol
+  const [identifiedTargets, setIdentifiedTargets] = useState(
+    () => GameState.getIdentifiedTargets()
+  );
+  const [patrolComplete, setPatrolComplete] = useState(false);
+  // Pending completion: set after the completing capture is dismissed
+  const pendingCompleteRef = useRef(false);
 
   // ── Initialize game state ──────────────────────────────────────────────────
   function initState(w, h) {
@@ -452,19 +466,45 @@ export default function Level1Scene({ chymp, onMenu }) {
       if (prog.identifiedCount === 1) GameState.awardBadge("ampC_apprentice");
       if (org.riskTier === "high") GameState.awardBadge("cefepime_commander");
       if (prog.ignoredCount >= 3) GameState.awardBadge("stewardship_sailor");
-    } else {
-      // Mis-handle — check for mutation on high-risk organisms
-      if (org.riskTier === "high") {
-        const { didMutate } = trackerRef.current.recordMisHandle(org);
-        if (didMutate) {
-          // TODO: sound — play mutation alarm sound
-          setMutationBanner(`🦠 ${org.name} has adapted — resistance selected! Switch to Cefepime.`);
-          setTimeout(() => setMutationBanner(null), 5000);
+
+      // Track patrol completion for SEACHYMP targets
+      if (org.isSeachymp) {
+        const newTargets = GameState.addIdentifiedTarget(org.id);
+        setIdentifiedTargets(new Set(newTargets));
+        // Check if all targets have been identified
+        const allDone = SEACHYMP_TARGET_IDS.every((id) => newTargets.has(id));
+        if (allDone) {
+          GameState.awardBadge("master_seachymp");
+          // Signal patrol complete AFTER this card is dismissed
+          pendingCompleteRef.current = true;
         }
+      }
+    } else {
+      // Incorrect handling — record against the organism TYPE (shared across instances)
+      const { didMutate } = trackerRef.current.recordMisHandle(org);
+      if (didMutate) {
+        // TODO: sound — play mutation alarm sound
+        setMutationBanner(`${org.name} has adapted — resistance selected! Switch to Cefepime.`);
+        setTimeout(() => setMutationBanner(null), 5000);
       }
     }
 
+    // Dismiss the card; then check if patrol is now complete
     setCapturedOrg(null);
+    if (pendingCompleteRef.current) {
+      pendingCompleteRef.current = false;
+      // Small delay so the dismiss animation finishes before showing the overlay
+      setTimeout(() => setPatrolComplete(true), 300);
+    }
+  }
+
+  // ── Close info card without deciding ─────────────────────────────────────
+  function handleClose() {
+    setCapturedOrg(null);
+    if (pendingCompleteRef.current) {
+      pendingCompleteRef.current = false;
+      setTimeout(() => setPatrolComplete(true), 300);
+    }
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -490,10 +530,47 @@ export default function Level1Scene({ chymp, onMenu }) {
           org={capturedOrg}
           mutated={trackerRef.current.isMutated(capturedOrg.id)}
           onDecide={handleDecision}
-          onClose={() => setCapturedOrg(null)}
+          onClose={handleClose}
           alreadyInEncyclopedia={GameState.hasInEncyclopedia(capturedOrg.id)}
         />
       )}
+
+      {patrolComplete && (
+        <PatrolCompleteOverlay
+          onMenu={onMenu}
+          onViewReef={() => onMenu("reef")}
+          onViewEncyclopedia={() => onMenu("encyclopedia")}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Patrol Complete Overlay ───────────────────────────────────────────────────
+function PatrolCompleteOverlay({ onMenu }) {
+  return (
+    <div className="patrol-overlay" role="dialog" aria-modal="true" aria-label="Reef Patrol Complete">
+      <div className="patrol-card info-card">
+        <div className="patrol-header">
+          <div className="patrol-icon" aria-hidden="true" />
+          <h2 className="patrol-title">Reef Patrol Complete</h2>
+        </div>
+        <div className="patrol-body">
+          <p className="patrol-message">
+            Outstanding work. You identified every SEACHYMP target organism — including
+            the bonus Klebsiella aerogenes. The reef thanks you.
+          </p>
+          <p className="patrol-sub">
+            Your knowledge of AmpC producers is now logged in the encyclopedia. Keep
+            revisiting to reinforce the patterns.
+          </p>
+        </div>
+        <div className="patrol-actions">
+          <button className="btn-primary patrol-btn" onClick={onMenu}>
+            Return to Menu
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -37,11 +37,22 @@ export default function SquadSelect({ onSelect, onBack }) {
               aria-label={`Select ${chymp.name}`}
               style={{ "--chymp-color": chymp.color }}
             >
-              <div className="squad-emoji">{chymp.emoji}</div>
+              {/* Colored shape placeholder art — no emoji */}
+              <div
+                className="squad-shape"
+                style={{
+                  background: (chymp.color || "#38b2e8") + "33",
+                  borderColor: chymp.color || "#38b2e8",
+                  color: chymp.color || "#38b2e8",
+                }}
+                aria-hidden="true"
+              >
+                {chymp.name.slice(0, 2).toUpperCase()}
+              </div>
               <div className="squad-name">{chymp.name}</div>
               <div className="squad-tagline">{chymp.tagline}</div>
               {chosen === chymp.id && (
-                <div className="squad-check" aria-hidden="true">✓</div>
+                <div className="squad-selected-indicator" aria-hidden="true" />
               )}
             </button>
           ))}

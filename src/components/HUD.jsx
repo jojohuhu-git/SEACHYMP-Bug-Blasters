@@ -7,10 +7,14 @@ export default function HUD({ chymp, identified, reefStage, onMenu }) {
       <div className="hud-left">
         <div
           className="hud-avatar"
-          style={{ borderColor: chymp?.color || "#38b2e8" }}
+          style={{
+            borderColor: chymp?.color || "#38b2e8",
+            background: (chymp?.color || "#38b2e8") + "22",
+            color: chymp?.color || "#38b2e8",
+          }}
           aria-label={`Playing as ${chymp?.name || "Chymp"}`}
         >
-          {chymp?.emoji || "🐵"}
+          {chymp?.name ? chymp.name.slice(0, 2).toUpperCase() : "CH"}
         </div>
         <span className="hud-chymp-name">{chymp?.name || "Chymp"}</span>
       </div>
@@ -22,7 +26,6 @@ export default function HUD({ chymp, identified, reefStage, onMenu }) {
           <span className="hud-stat-label">identified</span>
         </div>
         <div className="hud-reef">
-          <span className="hud-reef-emoji">{reefStage.emoji}</span>
           <span className="hud-reef-label">{reefStage.label}</span>
         </div>
       </div>
@@ -30,7 +33,7 @@ export default function HUD({ chymp, identified, reefStage, onMenu }) {
       {/* Right: Menu button */}
       <div className="hud-right">
         <button className="hud-menu-btn" onClick={onMenu} aria-label="Open menu">
-          ☰ Menu
+          Menu
         </button>
       </div>
     </div>

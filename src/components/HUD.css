@@ -26,13 +26,14 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 2px solid var(--accent);
+  border: 2px solid;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
-  background: rgba(255,255,255,0.08);
+  font-size: 0.7rem;
+  font-weight: 800;
   flex-shrink: 0;
+  letter-spacing: -0.02em;
 }
 
 .hud-chymp-name {
@@ -81,8 +82,6 @@
   border-radius: var(--rads);
   padding: 4px 10px;
 }
-
-.hud-reef-emoji { font-size: 1rem; }
 
 .hud-reef-label {
   font-size: 0.75rem;

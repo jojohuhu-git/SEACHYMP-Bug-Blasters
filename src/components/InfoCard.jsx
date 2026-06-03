@@ -7,13 +7,25 @@ export default function InfoCard({ org, mutated, onDecide, onClose, alreadyInEnc
     ? <span className="risk-low">LOW RISK AmpC</span>
     : <span className="info-no-risk">Not an AmpC organism</span>;
 
+  // First sentence of blurb only
+  const blurbFirst = org.blurb ? org.blurb.split(/\.\s+/)[0].replace(/\.$/, "") + "." : "";
+
+  // Colored shape placeholder art — no emoji
+  const artBg = (org.color || "#38b2e8") + "22";
+  const monogram = org.name.slice(0, 2).toUpperCase();
+
   return (
     <div className="info-overlay" role="dialog" aria-modal="true" aria-label={`Info card: ${org.name}`}>
       <div className="info-card">
         {/* Header */}
         <div className="info-header" style={{ borderTopColor: org.isSeachymp ? org.color : "#94a3b8" }}>
-          <div className="info-art" style={{ background: (org.color || "#38b2e8") + "22" }}>
-            <span className="info-emoji">{org.emoji}</span>
+          <div className="info-art" style={{ background: artBg, border: `2px solid ${org.color || "#38b2e8"}` }}>
+            <span
+              className="info-art-mono"
+              style={{ color: org.color || "#38b2e8" }}
+            >
+              {monogram}
+            </span>
             {mutated && <span className="info-mutated-tag">MUTATED</span>}
           </div>
           <div className="info-title-block">
@@ -21,13 +33,8 @@ export default function InfoCard({ org, mutated, onDecide, onClose, alreadyInEnc
             <p className="info-species">{org.species}</p>
             <div className="info-tags">
               {riskLabel}
-              {org.isSeachymp && (
-                <span className={`info-seachymp-badge ${org.bonus ? "info-seachymp-badge--bonus" : ""}`}>
-                  {org.bonus ? "BONUS" : "SEACHYMP"}
-                </span>
-              )}
               {alreadyInEncyclopedia && (
-                <span className="info-already">✓ In Encyclopedia</span>
+                <span className="info-already">In Encyclopedia</span>
               )}
             </div>
           </div>
@@ -36,18 +43,11 @@ export default function InfoCard({ org, mutated, onDecide, onClose, alreadyInEnc
 
         {/* Body */}
         <div className="info-body">
-          <p className="info-blurb">{org.blurb}</p>
-
-          {org.teachingPoint && (
-            <div className="info-teaching">
-              <span className="info-teaching-label">📚 Clinical note</span>
-              <p>{org.teachingPoint}</p>
-            </div>
-          )}
+          <p className="info-blurb">{blurbFirst}</p>
 
           {mutated && (
             <div className="info-mutation-warn">
-              <strong>⚠ Mutated form detected.</strong> Ceftriaxone, TMP-SMX, and
+              <strong>Mutated form detected.</strong> Ceftriaxone, TMP-SMX, and
               fluoroquinolones are now flagged ineffective. Prefer Cefepime or a carbapenem.
             </div>
           )}
@@ -62,13 +62,13 @@ export default function InfoCard({ org, mutated, onDecide, onClose, alreadyInEnc
                 className="btn-decide btn-decide--identify"
                 onClick={() => onDecide(org, "identify")}
               >
-                🎯 Yes — SEACHYMP target
+                Yes — SEACHYMP target
               </button>
               <button
                 className="btn-decide btn-decide--ignore"
                 onClick={() => onDecide(org, "ignore")}
               >
-                🌊 No — leave it alone
+                No — leave it alone
               </button>
             </div>
           </div>

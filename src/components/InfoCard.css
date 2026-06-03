@@ -49,9 +49,11 @@
   position: relative;
 }
 
-.info-emoji {
-  font-size: 2.6rem;
+.info-art-mono {
+  font-size: 1.5rem;
+  font-weight: 800;
   line-height: 1;
+  letter-spacing: -0.02em;
 }
 
 .info-mutated-tag {

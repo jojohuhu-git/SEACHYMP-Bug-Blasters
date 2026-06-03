@@ -18,7 +18,6 @@ export default function TitleScreen({ onPlay, onHowToPlay, onEncyclopedia, onRee
       <div className="title-content">
         {/* Logo / title */}
         <div className="title-logo" aria-label="SEACHYMP Bug Blasters game logo">
-          <div className="title-logo-icon">🌊</div>
           <h1 className="title-name">
             <span className="title-seachymp">SEACHYMP</span>
             <span className="title-subtitle-inline"> Bug Blasters</span>
@@ -48,20 +47,20 @@ export default function TitleScreen({ onPlay, onHowToPlay, onEncyclopedia, onRee
         {/* Menu buttons */}
         <div className="title-buttons">
           <button className="btn-primary title-btn-play" onClick={onPlay}>
-            🐠 Start Adventure
+            Start Adventure
           </button>
           <button className="btn-secondary" onClick={onHowToPlay}>
-            📖 How to Play
+            How to Play
           </button>
           <div className="title-btn-row">
             <button className="btn-secondary btn-sm" onClick={onEncyclopedia}>
-              📚 Encyclopedia
+              Encyclopedia
             </button>
             <button className="btn-secondary btn-sm" onClick={onReef}>
-              🪸 My Reef
+              My Reef
             </button>
             <button className="btn-secondary btn-sm" onClick={onWeapons}>
-              ⚡ Weapons
+              Weapons
             </button>
           </div>
         </div>

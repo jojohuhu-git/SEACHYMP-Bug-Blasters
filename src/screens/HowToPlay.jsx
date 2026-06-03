@@ -14,7 +14,7 @@ export default function HowToPlay({ onBack }) {
           ← Back
         </button>
 
-        <h1 className="htp-title">📖 How to Play</h1>
+        <h1 className="htp-title">How to Play</h1>
         <p className="htp-intro">
           Bug Blasters is a calm, no-fail educational game for clinicians and learners.
           There are no timers, no penalties, and no game-over screen. Your goal is
@@ -23,7 +23,7 @@ export default function HowToPlay({ onBack }) {
 
         {/* The SEACHYMP Mnemonic */}
         <section className="htp-section">
-          <h2>🌊 The SEACHYMP Organisms</h2>
+          <h2>The SEACHYMP Organisms</h2>
           <p>
             <strong>SEACHYMP</strong> is a mnemonic for AmpC beta-lactamase–producing
             gram-negative organisms. These bacteria have the potential to develop
@@ -58,7 +58,7 @@ export default function HowToPlay({ onBack }) {
 
         {/* Goal */}
         <section className="htp-section">
-          <h2>🎯 Your Goal</h2>
+          <h2>Your Goal</h2>
           <p>
             Swim through the reef, <strong>identify SEACHYMP organisms</strong>, and
             <strong> leave non-targets alone</strong>. Good stewardship means treating
@@ -72,10 +72,10 @@ export default function HowToPlay({ onBack }) {
 
         {/* Controls */}
         <section className="htp-section">
-          <h2>🕹 Controls</h2>
+          <h2>Controls</h2>
           <div className="htp-controls-grid">
             <div className="htp-control-block">
-              <h3>⌨️ Keyboard</h3>
+              <h3>Keyboard</h3>
               <ul>
                 <li><kbd>Arrow keys</kbd> or <kbd>W A S D</kbd> — swim</li>
                 <li><kbd>Space</kbd> or <kbd>E</kbd> — capture nearby organism</li>
@@ -83,7 +83,7 @@ export default function HowToPlay({ onBack }) {
               </ul>
             </div>
             <div className="htp-control-block">
-              <h3>👆 Touch / Mouse</h3>
+              <h3>Touch / Mouse</h3>
               <ul>
                 <li><strong>Drag</strong> on the ocean — swim toward drag direction</li>
                 <li><strong>Tap / Click</strong> an organism — capture it</li>
@@ -95,26 +95,25 @@ export default function HowToPlay({ onBack }) {
 
         {/* Capture & Info Card */}
         <section className="htp-section">
-          <h2>🕸 Capture &amp; Identify</h2>
+          <h2>Capture &amp; Identify</h2>
           <p>
             When you capture an organism, an <strong>info card</strong> appears showing:
           </p>
           <ul className="htp-ul">
             <li>The organism&apos;s name, species, and visual</li>
-            <li>Whether it is a SEACHYMP target</li>
             <li>Its AmpC risk tier (HIGH or LOW)</li>
-            <li>A clinical teaching point</li>
+            <li>A brief description</li>
           </ul>
           <p>
-            Choose <strong>&quot;Identify (SEACHYMP target)&quot;</strong> or{" "}
-            <strong>&quot;Ignore (not a target)&quot;</strong>.
+            Choose <strong>&quot;Yes — SEACHYMP target&quot;</strong> or{" "}
+            <strong>&quot;No — leave it alone&quot;</strong>.
             Correct answers add the organism to your Encyclopedia and nudge the reef forward.
           </p>
         </section>
 
         {/* HIGH vs LOW risk */}
         <section className="htp-section htp-section--risk">
-          <h2>⚡ High-Risk vs Low-Risk AmpC</h2>
+          <h2>High-Risk vs Low-Risk AmpC</h2>
           <p>
             Not all SEACHYMP organisms carry the same risk. The key clinical rule:
           </p>
@@ -123,27 +122,27 @@ export default function HowToPlay({ onBack }) {
             <br />
             Enterobacter cloacae, Citrobacter freundii, Klebsiella aerogenes
             <br />
-            <span>→ Prefer <strong>Cefepime</strong> (4th-gen) over 3rd-gen cephalosporins for serious infections</span>
+            <span>Prefer <strong>Cefepime</strong> (4th-gen) over 3rd-gen cephalosporins for serious infections</span>
           </div>
           <div className="htp-rule-box htp-rule-low">
             <strong>LOW-RISK AmpC</strong>
             <br />
             Serratia, Aeromonas, Hafnia, Yersinia, Morganella, Providencia
             <br />
-            <span>→ <strong>Ceftriaxone</strong> is often acceptable, but context matters (infection type, source control, duration)</span>
+            <span><strong>Ceftriaxone</strong> is often acceptable, but context matters (infection type, source control, duration)</span>
           </div>
         </section>
 
         {/* Mutation warning */}
         <section className="htp-section htp-section--mutation">
-          <h2>🧬 The Mutation Warning</h2>
+          <h2>The Mutation Warning</h2>
           <p>
             If you repeatedly <strong>mishandle a HIGH-risk organism</strong> (mis-identify it,
             or in later levels apply an inappropriate antibiotic), that organism can
             <strong> adapt</strong>. You will see a red banner:
           </p>
           <div className="htp-mutation-demo">
-            🦠 The organism has adapted. Resistance selected!
+            The organism has adapted. Resistance selected!
           </div>
           <p>
             In mutated form, Ceftriaxone, TMP-SMX, and fluoroquinolones are flagged
@@ -154,7 +153,7 @@ export default function HowToPlay({ onBack }) {
 
         {/* Badges */}
         <section className="htp-section">
-          <h2>🏅 Badges &amp; Reef Progress</h2>
+          <h2>Badges &amp; Reef Progress</h2>
           <p>
             Earn badges by reaching milestones: your first SEACHYMP capture, correctly
             recognizing a HIGH-risk organism, completing the full SEACHYMP set, and more.
@@ -164,7 +163,7 @@ export default function HowToPlay({ onBack }) {
 
         <div className="htp-actions">
           <button className="btn-primary" onClick={onBack}>
-            Got it — let&apos;s dive in! 🌊
+            Got it — let&apos;s dive in!
           </button>
         </div>
       </div>

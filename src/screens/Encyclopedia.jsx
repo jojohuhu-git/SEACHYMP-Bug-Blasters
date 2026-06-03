@@ -20,7 +20,7 @@ export default function Encyclopedia({ onBack }) {
       <div className="enc-content">
         <button className="btn-back" onClick={onBack}>← Back</button>
 
-        <h1 className="enc-title">📚 Encyclopedia</h1>
+        <h1 className="enc-title">Encyclopedia</h1>
         <p className="enc-sub">
           {seachympCollected.length} / {total} SEACHYMP organisms discovered
         </p>
@@ -38,7 +38,17 @@ export default function Encyclopedia({ onBack }) {
                   {collected.map((org) => (
                     <div key={org.id} className="enc-card card" style={{ borderTopColor: org.isSeachymp ? org.color : "#475569" }}>
                       <div className="enc-card-header">
-                        <span className="enc-emoji">{org.emoji}</span>
+                        {/* Colored shape placeholder art — no emoji */}
+                        <div
+                          className="enc-art-shape"
+                          style={{
+                            background: (org.color || "#38b2e8") + "22",
+                            borderColor: org.color || "#38b2e8",
+                            color: org.color || "#38b2e8",
+                          }}
+                        >
+                          {org.name.slice(0, 2).toUpperCase()}
+                        </div>
                         <div>
                           <div className="enc-name">{org.name}</div>
                           <div className="enc-species">{org.species}</div>
@@ -47,13 +57,11 @@ export default function Encyclopedia({ onBack }) {
                       <div className="enc-tags">
                         {org.riskTier === "high" && <span className="risk-high">HIGH RISK</span>}
                         {org.riskTier === "low" && <span className="risk-low">LOW RISK</span>}
-                        {org.isSeachymp && (
-                          <span className={`enc-badge ${org.bonus ? "enc-badge--bonus" : ""}`}>
-                            {org.bonus ? "BONUS" : "SEACHYMP"}
-                          </span>
-                        )}
+                        {org.bonus && <span className="enc-badge enc-badge--bonus">BONUS</span>}
                       </div>
-                      <p className="enc-teaching">{org.teachingPoint}</p>
+                      <p className="enc-blurb">
+                        {org.blurb ? org.blurb.split(/\.\s+/)[0].replace(/\.$/, "") + "." : ""}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -68,7 +76,7 @@ export default function Encyclopedia({ onBack }) {
                   {ORGANISMS.filter((o) => o.isSeachymp && !encyclopedia.has(o.id)).map((org) => (
                     <div key={org.id} className="enc-card enc-card--unknown card">
                       <div className="enc-card-header">
-                        <span className="enc-emoji enc-emoji--unknown">?</span>
+                        <div className="enc-art-shape enc-art-shape--unknown">?</div>
                         <div>
                           <div className="enc-name enc-name--unknown">???</div>
                           <div className="enc-species">Undiscovered organism</div>

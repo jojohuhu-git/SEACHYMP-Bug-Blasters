@@ -13,6 +13,7 @@ const KEYS = {
   ENCYCLOPEDIA: "bugblasters_encyclopedia",
   BADGES: "bugblasters_badges",
   PROGRESS: "bugblasters_progress",
+  IDENTIFIED_TARGETS: "bugblasters_identified_targets",
 };
 
 function load(key, fallback) {
@@ -87,6 +88,24 @@ export const GameState = {
     p.ignoredCount += 1;
     save(KEYS.PROGRESS, p);
     return p;
+  },
+
+  // ── Identified Targets (per-patrol completion tracking) ──────────────────
+  getIdentifiedTargets() {
+    const arr = load(KEYS.IDENTIFIED_TARGETS, []);
+    return new Set(arr);
+  },
+  addIdentifiedTarget(organismId) {
+    const set = GameState.getIdentifiedTargets();
+    set.add(organismId);
+    save(KEYS.IDENTIFIED_TARGETS, [...set]);
+    return set;
+  },
+  hasIdentifiedTarget(organismId) {
+    return GameState.getIdentifiedTargets().has(organismId);
+  },
+  resetIdentifiedTargets() {
+    save(KEYS.IDENTIFIED_TARGETS, []);
   },
 
   // ── Full reset ────────────────────────────────────────────────────────────

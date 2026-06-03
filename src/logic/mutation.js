@@ -1,9 +1,13 @@
 /**
  * mutation.js — Shared mutation engine.
  *
- * Rule: if the player mis-handles a HIGH-risk AmpC organism
- * MUTATION_THRESHOLD times (e.g., repeatedly tries to ignore or
- * misidentify it), the organism "adapts".
+ * Rule: if the player mis-handles the SAME organism TYPE (by id / name)
+ * MUTATION_THRESHOLD times across any number of floating instances,
+ * that organism type "adapts".
+ *
+ * The counter is keyed on organism.id (the canonical type, e.g. "enterobacter"),
+ * NOT on the floating instance. Clicking three different drifting Enterobacter
+ * wrong is the same as clicking one three times.
  *
  * In mutated form:
  *   - Visual: darker tint, spikier placeholder, `mutated: true` flag
@@ -16,18 +20,20 @@
  */
 
 // TODO: sound — play an ominous mutation sound here
-export const MUTATION_THRESHOLD = 3; // mis-handles before mutation triggers
+export const MUTATION_THRESHOLD = 3; // incorrect handlings of SAME TYPE before mutation
 
 /** Weapons that are INEFFECTIVE against a mutated organism */
 export const INEFFECTIVE_ON_MUTATED = ["ceftriaxone", "tmp_smx", "fluoroquinolone"];
 
 /**
- * MutationTracker — tracks per-organism mis-handle counts and mutation state.
+ * MutationTracker — tracks per-organism-type mis-handle counts and mutation state.
+ * Keyed on organism.id (canonical type, shared across all floating instances of
+ * the same named organism).
  * Instantiate once per game session (or per level instance).
  */
 export class MutationTracker {
   constructor() {
-    // Maps organism id → { misHandleCount, mutated }
+    // Maps organism.id (type) → { misHandleCount, mutated }
     this._state = {};
   }
 
@@ -48,15 +54,22 @@ export class MutationTracker {
   }
 
   /**
-   * Record a mis-handle event for a high-risk organism.
+   * Record an incorrect handling event for an organism TYPE.
+   * "Incorrect handling" means: wrong identify/ignore decision regardless of riskTier.
+   * The mutation threshold is only crossed for high-risk organisms (riskTier === "high"),
+   * but we count mis-handles for any type so callers can drive different visual cues later.
+   *
    * Returns { didMutate: bool } — true if THIS event crossed the threshold.
    */
   recordMisHandle(organism) {
-    if (!organism || organism.riskTier !== "high") {
-      return { didMutate: false };
-    }
-    this._ensure(organism.id);
-    const entry = this._state[organism.id];
+    if (!organism) return { didMutate: false };
+    // Only high-risk organisms can mutate
+    if (organism.riskTier !== "high") return { didMutate: false };
+
+    // Key is organism.id — the TYPE, shared across all floating instances
+    const typeId = organism.id;
+    this._ensure(typeId);
+    const entry = this._state[typeId];
     if (entry.mutated) return { didMutate: false }; // already mutated
 
     entry.misHandleCount += 1;

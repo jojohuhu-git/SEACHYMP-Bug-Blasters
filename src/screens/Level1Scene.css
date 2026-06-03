@@ -13,3 +13,78 @@
   cursor: crosshair;
   touch-action: none;
 }
+
+/* ── Patrol Complete Overlay ── */
+.patrol-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 20, 48, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 16px;
+  backdrop-filter: blur(6px);
+}
+
+.patrol-card {
+  max-width: 460px;
+  width: 100%;
+  animation: cardIn 0.25s ease;
+}
+
+.patrol-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 20px 12px;
+  border-top: 4px solid var(--low-risk);
+}
+
+/* Colored shape marker — no emoji */
+.patrol-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--low-risk-bg);
+  border: 2px solid var(--low-risk);
+  flex-shrink: 0;
+}
+
+.patrol-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--low-risk);
+}
+
+.patrol-body {
+  padding: 0 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.patrol-message {
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.patrol-sub {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.patrol-actions {
+  padding: 12px 20px 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.patrol-btn {
+  width: 100%;
+  text-align: center;
+}
