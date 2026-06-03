@@ -81,6 +81,24 @@ export class MutationTracker {
   }
 
   /**
+   * Record an INAPPROPRIATE CEFTRIAXONE event for an organism TYPE.
+   *
+   * This is the Level 2 mutation driver: giving Ceftriaxone to a high-risk
+   * AmpC organism selects for resistance. MUTATION_THRESHOLD such calls on the
+   * same organism type (across any number of floating instances) trigger the
+   * AmpC Mutation Form. Other wrong weapon choices do NOT breed resistance.
+   *
+   * Delegates to the same per-type counter as recordMisHandle (gated on
+   * riskTier === "high"), so callers should only invoke this for an actual
+   * inappropriate-Ceftriaxone event.
+   *
+   * Returns { didMutate: bool } — true if THIS event crossed the threshold.
+   */
+  recordInappropriateCeftriaxone(organism) {
+    return this.recordMisHandle(organism);
+  }
+
+  /**
    * Check whether a weapon choice is effective against an organism
    * (taking mutation into account).
    * Returns { effective: bool, reason: string }

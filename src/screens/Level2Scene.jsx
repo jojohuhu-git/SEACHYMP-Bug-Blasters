@@ -139,11 +139,13 @@ function drawPlayer(ctx, chymp, x, y) {
   ctx.restore();
 }
 
+// Level 2 uses a distinct teal/emerald reef palette so it reads differently
+// from Level 1's deep-blue water. (Level 3 will get its own palette when built.)
 function drawOcean(ctx, w, h, tick) {
   const grad = ctx.createLinearGradient(0, 0, 0, h);
-  grad.addColorStop(0, "#0c1445");
-  grad.addColorStop(0.5, "#0d3b6e");
-  grad.addColorStop(1, "#1a6fa0");
+  grad.addColorStop(0, "#04293a");
+  grad.addColorStop(0.5, "#0a5a52");
+  grad.addColorStop(1, "#1a8f7a");
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
 
@@ -157,13 +159,13 @@ function drawOcean(ctx, w, h, tick) {
     ctx.lineTo(rx - spread, h);
     ctx.lineTo(rx + spread, h);
     ctx.closePath();
-    ctx.fillStyle = "#b3e5fc";
+    ctx.fillStyle = "#c8f5e8";
     ctx.fill();
   }
   ctx.restore();
 
   ctx.save();
-  ctx.strokeStyle = "rgba(56, 178, 232, 0.15)";
+  ctx.strokeStyle = "rgba(45, 212, 191, 0.15)";
   ctx.lineWidth = 1;
   for (let row = 0; row < 3; row++) {
     ctx.beginPath();
@@ -597,12 +599,18 @@ export default function Level2Scene({ chymp, onMenu }) {
         }
       }
     } else {
-      // Wrong weapon on a SEACHYMP high-risk org — record as mis-handle for mutation
-      if (org.isSeachymp) {
-        const { didMutate } = trackerRef.current.recordMisHandle(org);
+      // Mutation is driven specifically by INAPPROPRIATE CEFTRIAXONE: giving
+      // Ceftriaxone to a high-risk AmpC organism. Three such calls on the same
+      // organism type select for resistance and trigger the AmpC Mutation Form.
+      // Other wrong choices (TMP-SMX/FQ on high-risk, carbapenem overuse) give
+      // corrective feedback but do not breed resistance here.
+      const inappropriateCeftriaxone =
+        org.isSeachymp && org.riskTier === "high" && weaponId === "ceftriaxone";
+      if (inappropriateCeftriaxone) {
+        const { didMutate } = trackerRef.current.recordInappropriateCeftriaxone(org);
         if (didMutate) {
           setMutationBanner(
-            `${org.name} has adapted — resistance selected. Switch to Cefepime or a carbapenem.`
+            `${org.name} has adapted — repeated Ceftriaxone selected for resistance. Switch to Cefepime or a carbapenem.`
           );
           setTimeout(() => setMutationBanner(null), 5000);
         }
