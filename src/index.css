@@ -1,0 +1,231 @@
+/* Bug Blasters — Global styles & CSS design tokens */
+
+:root {
+  /* Ocean palette */
+  --ocean-deep: #0c1445;
+  --ocean-mid: #0d3b6e;
+  --ocean-light: #1a6fa0;
+  --ocean-surface: #38b2e8;
+  --ocean-foam: #b3e5fc;
+
+  /* UI colors */
+  --bg: #0a1628;
+  --bg-card: rgba(255, 255, 255, 0.08);
+  --bg-card-solid: #0f2545;
+  --bg-card-hover: rgba(255, 255, 255, 0.13);
+  --border: rgba(255, 255, 255, 0.15);
+  --text: #e8f4ff;
+  --text-muted: rgba(232, 244, 255, 0.6);
+  --text-dim: rgba(232, 244, 255, 0.4);
+
+  /* Status colors */
+  --high-risk: #ef4444;
+  --high-risk-bg: rgba(239, 68, 68, 0.15);
+  --low-risk: #22c55e;
+  --low-risk-bg: rgba(34, 197, 94, 0.15);
+  --neutral: #94a3b8;
+  --bonus: #f59e0b;
+  --bonus-bg: rgba(245, 158, 11, 0.15);
+
+  /* Accent */
+  --accent: #38b2e8;
+  --accent-glow: rgba(56, 178, 232, 0.3);
+
+  /* Radius */
+  --rad: 12px;
+  --rads: 8px;
+  --radxs: 4px;
+
+  /* Shadow */
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --glow: 0 0 20px var(--accent-glow);
+
+  /* Typography */
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  /* Touch target minimum */
+  --tap-min: 44px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body.scroll-mode {
+  overflow: auto;
+}
+
+h1, h2, h3, h4 {
+  line-height: 1.2;
+}
+
+button {
+  font-family: var(--font);
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Shared card style ── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--rad);
+  padding: 20px;
+  backdrop-filter: blur(8px);
+}
+
+/* ── Risk tier badges ── */
+.risk-high {
+  color: var(--high-risk);
+  background: var(--high-risk-bg);
+  border: 1px solid var(--high-risk);
+  padding: 3px 10px;
+  border-radius: var(--radxs);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.risk-low {
+  color: var(--low-risk);
+  background: var(--low-risk-bg);
+  border: 1px solid var(--low-risk);
+  padding: 3px 10px;
+  border-radius: var(--radxs);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.risk-bonus {
+  color: var(--bonus);
+  background: var(--bonus-bg);
+  border: 1px solid var(--bonus);
+  padding: 3px 10px;
+  border-radius: var(--radxs);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Buttons ── */
+.btn-primary {
+  background: var(--accent);
+  color: var(--ocean-deep);
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 14px 28px;
+  border-radius: var(--rads);
+  min-height: var(--tap-min);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+  background: #5cc8f5;
+  box-shadow: var(--glow);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active { transform: translateY(0); }
+
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 12px 24px;
+  border-radius: var(--rads);
+  border: 1px solid var(--border);
+  min-height: var(--tap-min);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent);
+}
+
+/* ── Full-screen overlay layout ── */
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.ocean-bg {
+  background: linear-gradient(180deg, var(--ocean-deep) 0%, var(--ocean-mid) 50%, var(--ocean-light) 100%);
+}
+
+.scroll-area {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Mutation banner ── */
+.mutation-banner {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #7f1d1d;
+  border: 2px solid #ef4444;
+  color: #fecaca;
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 12px 28px;
+  border-radius: 0 0 var(--rad) var(--rad);
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.5);
+  animation: slideBannerIn 0.3s ease;
+  text-align: center;
+}
+
+@keyframes slideBannerIn {
+  from { transform: translateX(-50%) translateY(-100%); }
+  to   { transform: translateX(-50%) translateY(0); }
+}
+
+@media (max-width: 600px) {
+  .card { padding: 14px; }
+  .btn-primary { font-size: 0.95rem; padding: 12px 20px; }
+}

@@ -1,0 +1,18 @@
+/* App.css — Bug Blasters app-level overrides (most styles are in index.css and component CSS) */
+
+/* Shared back button used across screens */
+.btn-back {
+  align-self: flex-start;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--rads);
+  margin-bottom: 4px;
+}
+
+.btn-back:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}

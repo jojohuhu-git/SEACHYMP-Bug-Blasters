@@ -1,0 +1,140 @@
+.reef-screen {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.reef-content {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.reef-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--accent);
+  margin: 8px 0 0;
+}
+
+.reef-stage-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.reef-stage-emoji { font-size: 3rem; line-height: 1; }
+
+.reef-stage-name {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.reef-stage-desc {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Stage progress steps */
+.reef-stages {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reef-stage-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--rads);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  opacity: 0.5;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.reef-stage-step--reached { opacity: 1; }
+.reef-stage-step--current {
+  border-color: var(--accent);
+  background: rgba(56,178,232,0.08);
+}
+
+.reef-step-emoji { font-size: 1.3rem; width: 28px; text-align: center; }
+.reef-step-label { flex: 1; font-weight: 600; color: var(--text); }
+.reef-step-req { font-size: 0.75rem; color: var(--text-dim); }
+.reef-step-you { font-size: 0.75rem; color: var(--accent); font-weight: 600; }
+
+/* Stats */
+.reef-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.reef-stat { text-align: center; }
+
+.reef-stat-val {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.reef-stat-lbl {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+/* Badges */
+.reef-badges-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: -10px;
+}
+
+.reef-badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.reef-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  padding: 14px 10px;
+}
+
+.reef-badge--locked {
+  opacity: 0.4;
+}
+
+.reef-badge-emoji { font-size: 1.8rem; }
+
+.reef-badge-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.reef-badge-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}

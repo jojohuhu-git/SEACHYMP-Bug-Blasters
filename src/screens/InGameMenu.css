@@ -1,0 +1,55 @@
+.igm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 20, 48, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  backdrop-filter: blur(6px);
+  padding: 16px;
+}
+
+.igm-panel {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 28px 24px;
+}
+
+.igm-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.igm-chymp {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+
+.igm-chymp span:first-child { font-size: 1.8rem; }
+
+.igm-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.igm-btn {
+  width: 100%;
+  text-align: center;
+}
+
+.igm-btn--quit {
+  color: var(--text-dim);
+  border-color: rgba(255,255,255,0.1);
+  font-size: 0.85rem;
+}
