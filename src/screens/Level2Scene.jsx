@@ -384,6 +384,7 @@ export default function Level2Scene({ chymp, onMenu }) {
   const [capturedOrg, setCapturedOrg] = useState(null);
   // animatingShot: true while the projectile is in flight (card hidden, canvas visible)
   const [animatingShot, setAnimatingShot] = useState(false);
+  const animatingShotRef = useRef(false); // ref mirror so loop closure stays stable
   // pendingWeaponResult: holds {org, weaponId, result} for after animation completes
   const pendingWeaponResultRef = useRef(null);
   const [mutationBanner, setMutationBanner] = useState(null);
@@ -428,6 +429,7 @@ export default function Level2Scene({ chymp, onMenu }) {
       org.pulseProgress = 0;
     }
     // Re-show the weapon choice card with its result
+    animatingShotRef.current = false;
     setAnimatingShot(false);
   }
 
@@ -655,6 +657,7 @@ export default function Level2Scene({ chymp, onMenu }) {
     // Fire projectile (hide card during flight)
     const canvasOrg = s && s.organisms.find((o) => o.id_instance === org.id_instance);
     if (!reducedMotionRef.current && s && canvasOrg) {
+      animatingShotRef.current = true;
       setAnimatingShot(true);
       const weapon = WEAPONS.find((w) => w.id === weaponId) || { color: "#94a3b8" };
       createShot(s.shots, {
@@ -723,6 +726,7 @@ export default function Level2Scene({ chymp, onMenu }) {
 
   function handleClose() {
     setCapturedOrg(null);
+    animatingShotRef.current = false;
     setAnimatingShot(false);
     if (pendingCompleteRef.current) {
       pendingCompleteRef.current = false;

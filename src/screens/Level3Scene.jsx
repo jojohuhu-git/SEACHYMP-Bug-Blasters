@@ -477,6 +477,8 @@ export default function Level3Scene({ chymp, onMenu }) {
   // pendingResult is set right after weapon choice, before card closes, for animation
   const pendingResultRef = useRef(null);
   const [animatingShot, setAnimatingShot] = useState(false);
+  // Ref mirror so the loop closure doesn't need animatingShot in its dep array
+  const animatingShotRef = useRef(false);
 
   const [mutationBanner, setMutationBanner] = useState(null);
   const [identified, setIdentified] = useState(
@@ -521,6 +523,7 @@ export default function Level3Scene({ chymp, onMenu }) {
       org.pulseProgress = 0;
     }
     // Reveal the card result
+    animatingShotRef.current = false;
     setAnimatingShot(false);
   }
 
@@ -532,16 +535,16 @@ export default function Level3Scene({ chymp, onMenu }) {
 
     s.tick++;
 
-    // Movement
+    // Movement — paused during projectile animation (use ref to avoid loop restart)
     let dx = 0, dy = 0;
-    if (!animatingShot) {
+    if (!animatingShotRef.current) {
       if (s.keys["ArrowLeft"] || s.keys["a"] || s.keys["A"]) dx -= 1;
       if (s.keys["ArrowRight"] || s.keys["d"] || s.keys["D"]) dx += 1;
       if (s.keys["ArrowUp"] || s.keys["w"] || s.keys["W"]) dy -= 1;
       if (s.keys["ArrowDown"] || s.keys["s"] || s.keys["S"]) dy += 1;
     }
 
-    if (s.touch?.active && !animatingShot) {
+    if (s.touch?.active && !animatingShotRef.current) {
       dx = (s.touch.targetX - s.playerX) / 60;
       dy = (s.touch.targetY - s.playerY) / 60;
       const len = Math.sqrt(dx * dx + dy * dy);
@@ -611,7 +614,7 @@ export default function Level3Scene({ chymp, onMenu }) {
     drawPlayer(ctx, chymp, s.playerX, s.playerY);
 
     rafRef.current = requestAnimationFrame(loop);
-  }, [chymp, animatingShot]);
+  }, [chymp]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Canvas resize ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -775,6 +778,7 @@ export default function Level3Scene({ chymp, onMenu }) {
 
     // Hide card during animation, then restore with result
     if (!reducedMotionRef.current && canvasOrg) {
+      animatingShotRef.current = true;
       setAnimatingShot(true);
       // Fire projectile
       const weapon = WEAPONS.find((w) => w.id === weaponId) || { color: "#94a3b8" };
@@ -846,6 +850,7 @@ export default function Level3Scene({ chymp, onMenu }) {
   function handleClose() {
     setCapturedOrg(null);
     setActiveCase(null);
+    animatingShotRef.current = false;
     setAnimatingShot(false);
     if (pendingCompleteRef.current) {
       pendingCompleteRef.current = false;
