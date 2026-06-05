@@ -121,7 +121,7 @@ function drawOrganism(ctx, org, x, y, radius, mutated) {
   }
 }
 
-function drawPlayer(ctx, chymp, x, y, _facingRight) {
+function drawPlayer(ctx, chymp, x, y) {
   const r = PLAYER_RADIUS;
   const color = chymp?.color || "#38b2e8";
   // Monogram from chymp name
@@ -210,9 +210,11 @@ export default function Level1Scene({ chymp, onMenu }) {
   const canvasRef = useRef(null);
   const stateRef = useRef(null); // mutable game state, not React state
   const rafRef = useRef(null);
+  const loopRef = useRef(null); // holds latest loop fn so callback can self-schedule
   const trackerRef = useRef(new MutationTracker());
 
   const [capturedOrg, setCapturedOrg] = useState(null);   // info card open
+  const [capturedOrgMutated, setCapturedOrgMutated] = useState(false); // mutated snapshot at capture time
   const [mutationBanner, setMutationBanner] = useState(null); // banner text
   const [identified, setIdentified] = useState(() => GameState.getProgress().identifiedCount);
   const [reefStage, setReefStage] = useState(() => getReefStage(GameState.getProgress().identifiedCount));
@@ -239,6 +241,8 @@ export default function Level1Scene({ chymp, onMenu }) {
   }
 
   // ── Game loop ──────────────────────────────────────────────────────────────
+  // loopRef holds the latest loop fn so the callback can self-schedule without
+  // capturing itself in a closure (avoids react-hooks/immutability error).
   const loop = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas || !stateRef.current) return;
@@ -296,7 +300,7 @@ export default function Level1Scene({ chymp, onMenu }) {
     });
     drawPlayer(ctx, chymp, s.playerX, s.playerY, s.facingRight);
 
-    rafRef.current = requestAnimationFrame(loop);
+    rafRef.current = requestAnimationFrame(loopRef.current);
   }, [chymp]);
 
   // ── Canvas resize handler ─────────────────────────────────────────────────
@@ -324,9 +328,27 @@ export default function Level1Scene({ chymp, onMenu }) {
 
   // ── Start loop ────────────────────────────────────────────────────────────
   useEffect(() => {
-    rafRef.current = requestAnimationFrame(loop);
+    loopRef.current = loop; // sync ref before scheduling
+    rafRef.current = requestAnimationFrame(loopRef.current);
     return () => cancelAnimationFrame(rafRef.current);
   }, [loop]);
+
+  // ── Keyboard capture helper ───────────────────────────────────────────────
+  const tryCapture = useCallback(() => {
+    const s = stateRef.current;
+    if (!s) return;
+    const nearest = s.organisms.reduce((best, org) => {
+      const dx = org.x - s.playerX;
+      const dy = org.y - s.playerY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < CAPTURE_DIST && (!best || dist < best.dist)) return { org, dist };
+      return best;
+    }, null);
+    if (nearest) {
+      setCapturedOrg(nearest.org);
+      setCapturedOrgMutated(trackerRef.current.isMutated(nearest.org.id));
+    }
+  }, []);
 
   // ── Keyboard input ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -353,7 +375,7 @@ export default function Level1Scene({ chymp, onMenu }) {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [capturedOrg]);  
+  }, [capturedOrg, tryCapture]);
 
   // ── Mouse/touch events ────────────────────────────────────────────────────
   useEffect(() => {
@@ -382,6 +404,7 @@ export default function Level1Scene({ chymp, onMenu }) {
       });
       if (hit) {
         setCapturedOrg(hit);
+        setCapturedOrgMutated(trackerRef.current.isMutated(hit.id));
       }
     }
 
@@ -398,6 +421,7 @@ export default function Level1Scene({ chymp, onMenu }) {
       });
       if (hit && !capturedOrg) {
         setCapturedOrg(hit);
+        setCapturedOrgMutated(trackerRef.current.isMutated(hit.id));
         return;
       }
       // Otherwise start swimming
@@ -431,20 +455,6 @@ export default function Level1Scene({ chymp, onMenu }) {
       canvas.removeEventListener("touchend", onTouchEnd);
     };
   }, [capturedOrg]);
-
-  // ── Keyboard capture helper ───────────────────────────────────────────────
-  function tryCapture() {
-    const s = stateRef.current;
-    if (!s) return;
-    const nearest = s.organisms.reduce((best, org) => {
-      const dx = org.x - s.playerX;
-      const dy = org.y - s.playerY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < CAPTURE_DIST && (!best || dist < best.dist)) return { org, dist };
-      return best;
-    }, null);
-    if (nearest) setCapturedOrg(nearest.org);
-  }
 
   // ── Info card decision handler ────────────────────────────────────────────
   // Called by InfoCard when the player makes their identify/ignore choice.
@@ -523,7 +533,7 @@ export default function Level1Scene({ chymp, onMenu }) {
       {capturedOrg && (
         <InfoCard
           org={capturedOrg}
-          mutated={trackerRef.current.isMutated(capturedOrg.id)}
+          mutated={capturedOrgMutated}
           onDecide={handleDecision}
           onClose={handleClose}
           alreadyInEncyclopedia={GameState.hasInEncyclopedia(capturedOrg.id)}

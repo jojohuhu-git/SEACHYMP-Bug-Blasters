@@ -26,7 +26,6 @@ const ORBIT_COUNT = 8;
 
 // Only SEACHYMP organisms that have at least one case
 const CASE_ORG_IDS = new Set(CASES.map((c) => c.organismId));
-const SEACHYMP_IDS = ORGANISMS.filter((o) => o.isSeachymp).map((o) => o.id);
 
 const LEVEL3_POOL = [
   ...ORGANISMS.filter((o) => o.isSeachymp),
@@ -463,6 +462,7 @@ export default function Level3Scene({ chymp, onMenu }) {
   const canvasRef = useRef(null);
   const stateRef = useRef(null);
   const rafRef = useRef(null);
+  const loopRef = useRef(null); // holds latest loop fn so callback can self-schedule
   const trackerRef = useRef(new MutationTracker());
   const reducedMotionRef = useRef(
     typeof window !== "undefined"
@@ -472,6 +472,7 @@ export default function Level3Scene({ chymp, onMenu }) {
 
   // capturedOrg + activeCase are both set together when player clicks an organism
   const [capturedOrg, setCapturedOrg] = useState(null);
+  const [capturedOrgMutated, setCapturedOrgMutated] = useState(false); // mutated snapshot at capture time
   const [activeCase, setActiveCase] = useState(null);
   // pendingResult is set right after weapon choice, before card closes, for animation
   const pendingResultRef = useRef(null);
@@ -612,8 +613,8 @@ export default function Level3Scene({ chymp, onMenu }) {
     if (s.shots) drawShots(ctx, s.shots);
     drawPlayer(ctx, chymp, s.playerX, s.playerY);
 
-    rafRef.current = requestAnimationFrame(loop);
-  }, [chymp]);  
+    rafRef.current = requestAnimationFrame(loopRef.current);
+  }, [chymp]);
 
   // ── Canvas resize ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -634,9 +635,29 @@ export default function Level3Scene({ chymp, onMenu }) {
   }, []);  
 
   useEffect(() => {
-    rafRef.current = requestAnimationFrame(loop);
+    loopRef.current = loop; // sync ref before scheduling
+    rafRef.current = requestAnimationFrame(loopRef.current);
     return () => cancelAnimationFrame(rafRef.current);
   }, [loop]);
+
+  // ── Keyboard capture helper ───────────────────────────────────────────────
+  const tryCapture = useCallback(() => {
+    const s = stateRef.current;
+    if (!s) return;
+    const nearest = s.organisms.reduce((best, org) => {
+      const ddx = org.x - s.playerX;
+      const ddy = org.y - s.playerY;
+      const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+      if (dist < CAPTURE_DIST && (!best || dist < best.dist)) return { org, dist };
+      return best;
+    }, null);
+    if (nearest) {
+      const cs = pickCase(nearest.org.id);
+      setCapturedOrg(nearest.org);
+      setCapturedOrgMutated(trackerRef.current.isMutated(nearest.org.id));
+      setActiveCase(cs || null);
+    }
+  }, []);
 
   // ── Keyboard input ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -659,7 +680,7 @@ export default function Level3Scene({ chymp, onMenu }) {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [capturedOrg, animatingShot]);  
+  }, [capturedOrg, animatingShot, tryCapture]);
 
   // ── Mouse/touch events ────────────────────────────────────────────────────
   useEffect(() => {
@@ -688,6 +709,7 @@ export default function Level3Scene({ chymp, onMenu }) {
       if (hit) {
         const cs = pickCase(hit.id);
         setCapturedOrg(hit);
+        setCapturedOrgMutated(trackerRef.current.isMutated(hit.id));
         setActiveCase(cs || null);
       }
     }
@@ -705,6 +727,7 @@ export default function Level3Scene({ chymp, onMenu }) {
       if (hit && !capturedOrg && !animatingShot) {
         const cs = pickCase(hit.id);
         setCapturedOrg(hit);
+        setCapturedOrgMutated(trackerRef.current.isMutated(hit.id));
         setActiveCase(cs || null);
         return;
       }
@@ -737,23 +760,6 @@ export default function Level3Scene({ chymp, onMenu }) {
       canvas.removeEventListener("touchend", onTouchEnd);
     };
   }, [capturedOrg, animatingShot]);
-
-  function tryCapture() {
-    const s = stateRef.current;
-    if (!s) return;
-    const nearest = s.organisms.reduce((best, org) => {
-      const ddx = org.x - s.playerX;
-      const ddy = org.y - s.playerY;
-      const dist = Math.sqrt(ddx * ddx + ddy * ddy);
-      if (dist < CAPTURE_DIST && (!best || dist < best.dist)) return { org, dist };
-      return best;
-    }, null);
-    if (nearest) {
-      const cs = pickCase(nearest.org.id);
-      setCapturedOrg(nearest.org);
-      setActiveCase(cs || null);
-    }
-  }
 
   // ── Weapon choice result handler ──────────────────────────────────────────
   function handleWeaponChoice(org, weaponId, result, caseData) {
@@ -880,7 +886,7 @@ export default function Level3Scene({ chymp, onMenu }) {
           <CaseCard
             org={capturedOrg}
             caseData={activeCase}
-            mutated={trackerRef.current.isMutated(capturedOrg.id)}
+            mutated={capturedOrgMutated}
             onWeaponChoice={handleWeaponChoice}
             onClose={handleClose}
           />

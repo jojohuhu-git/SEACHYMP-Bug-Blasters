@@ -373,6 +373,7 @@ export default function Level2Scene({ chymp, onMenu }) {
   const canvasRef = useRef(null);
   const stateRef = useRef(null);
   const rafRef = useRef(null);
+  const loopRef = useRef(null); // holds latest loop fn so callback can self-schedule
   const trackerRef = useRef(new MutationTracker());
   const reducedMotionRef = useRef(
     typeof window !== "undefined"
@@ -381,6 +382,7 @@ export default function Level2Scene({ chymp, onMenu }) {
   );
 
   const [capturedOrg, setCapturedOrg] = useState(null);
+  const [capturedOrgMutated, setCapturedOrgMutated] = useState(false); // mutated snapshot at capture time
   // animatingShot: true while the projectile is in flight (card hidden, canvas visible)
   const [animatingShot, setAnimatingShot] = useState(false);
   const animatingShotRef = useRef(false); // ref mirror so loop closure stays stable
@@ -504,8 +506,8 @@ export default function Level2Scene({ chymp, onMenu }) {
     if (s.shots) drawShots(ctx, s.shots);
     drawPlayer(ctx, chymp, s.playerX, s.playerY);
 
-    rafRef.current = requestAnimationFrame(loop);
-  }, [chymp]);  
+    rafRef.current = requestAnimationFrame(loopRef.current);
+  }, [chymp]);
 
   // ── Canvas resize ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -526,9 +528,27 @@ export default function Level2Scene({ chymp, onMenu }) {
   }, []);  
 
   useEffect(() => {
-    rafRef.current = requestAnimationFrame(loop);
+    loopRef.current = loop; // sync ref before scheduling
+    rafRef.current = requestAnimationFrame(loopRef.current);
     return () => cancelAnimationFrame(rafRef.current);
   }, [loop]);
+
+  // ── Keyboard capture helper ───────────────────────────────────────────────
+  const tryCapture = useCallback(() => {
+    const s = stateRef.current;
+    if (!s) return;
+    const nearest = s.organisms.reduce((best, org) => {
+      const dx = org.x - s.playerX;
+      const dy = org.y - s.playerY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < CAPTURE_DIST && (!best || dist < best.dist)) return { org, dist };
+      return best;
+    }, null);
+    if (nearest) {
+      setCapturedOrg(nearest.org);
+      setCapturedOrgMutated(trackerRef.current.isMutated(nearest.org.id));
+    }
+  }, []);
 
   // ── Keyboard input ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -551,7 +571,7 @@ export default function Level2Scene({ chymp, onMenu }) {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [capturedOrg]);  
+  }, [capturedOrg, tryCapture]);
 
   // ── Mouse/touch events ────────────────────────────────────────────────────
   useEffect(() => {
@@ -577,7 +597,10 @@ export default function Level2Scene({ chymp, onMenu }) {
         const dy = org.y - pos.y;
         return Math.sqrt(dx * dx + dy * dy) <= ORG_RADIUS_BASE + 14;
       });
-      if (hit) setCapturedOrg(hit);
+      if (hit) {
+        setCapturedOrg(hit);
+        setCapturedOrgMutated(trackerRef.current.isMutated(hit.id));
+      }
     }
 
     function onTouchStart(e) {
@@ -590,7 +613,11 @@ export default function Level2Scene({ chymp, onMenu }) {
         const dy = org.y - pos.y;
         return Math.sqrt(dx * dx + dy * dy) <= ORG_RADIUS_BASE + 20;
       });
-      if (hit && !capturedOrg) { setCapturedOrg(hit); return; }
+      if (hit && !capturedOrg) {
+        setCapturedOrg(hit);
+        setCapturedOrgMutated(trackerRef.current.isMutated(hit.id));
+        return;
+      }
       s.touch.active = true;
       s.touch.targetX = pos.x;
       s.touch.targetY = pos.y;
@@ -621,19 +648,6 @@ export default function Level2Scene({ chymp, onMenu }) {
       canvas.removeEventListener("touchend", onTouchEnd);
     };
   }, [capturedOrg]);
-
-  function tryCapture() {
-    const s = stateRef.current;
-    if (!s) return;
-    const nearest = s.organisms.reduce((best, org) => {
-      const dx = org.x - s.playerX;
-      const dy = org.y - s.playerY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < CAPTURE_DIST && (!best || dist < best.dist)) return { org, dist };
-      return best;
-    }, null);
-    if (nearest) setCapturedOrg(nearest.org);
-  }
 
   // ── Weapon choice result handler ──────────────────────────────────────────
   // Called immediately when weapon is chosen, BEFORE card shows result.
@@ -672,6 +686,7 @@ export default function Level2Scene({ chymp, onMenu }) {
     } else {
       // Reduced motion or no canvas position — apply immediately without animation
       if (s && canvasOrg) {
+        // eslint-disable-next-line react-hooks/immutability
         if (outcome === "kill") { canvasOrg.fading = true; canvasOrg.fadeProgress = 0; }
         else if (outcome === "mutate") { canvasOrg.mutateFlash = 0; }
         else { canvasOrg.pulseProgress = 0; }
@@ -755,7 +770,7 @@ export default function Level2Scene({ chymp, onMenu }) {
         <div style={animatingShot ? { visibility: "hidden", pointerEvents: "none" } : {}}>
           <WeaponChoiceCard
             org={capturedOrg}
-            mutated={trackerRef.current.isMutated(capturedOrg.id)}
+            mutated={capturedOrgMutated}
             onWeaponChoice={handleWeaponChoice}
             onClose={handleClose}
           />
