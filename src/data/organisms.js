@@ -80,9 +80,9 @@ export const ORGANISMS = [
     emoji: "🐌",
     difficulty: "easy",
     teachingPoint:
-      "Aeromonas has inducible AmpC. For most infections, Ceftriaxone or fluoroquinolones are acceptable. High-inoculum or serious infections warrant closer attention.",
+      "Aeromonas has inducible AmpC but is generally low-risk for de-repression. Ceftriaxone is appropriate for most infections; escalate to Cefepime for serious or high-inoculum cases.",
     blurb:
-      "A squishy sea-slug with a leech mouth — surprisingly docile until cornered. Clinically: a waterborne gram-negative with AmpC; fluoroquinolones or Ceftriaxone often work well.",
+      "A squishy sea-slug with a leech mouth — surprisingly docile until cornered. Clinically: a waterborne gram-negative with low-risk AmpC; Ceftriaxone usually works well.",
   },
 
   {
@@ -131,9 +131,9 @@ export const ORGANISMS = [
     emoji: "🦀",
     difficulty: "easy",
     teachingPoint:
-      "Yersinia enterocolitica produces AmpC but is generally low-risk for de-repression. Most infections are self-limited; invasive infections may require fluoroquinolones or TMP-SMX.",
+      "Yersinia enterocolitica produces AmpC but is generally low-risk for de-repression. Most infections are self-limited; when treatment is indicated, Ceftriaxone or Cefepime are appropriate.",
     blurb:
-      "A tiny blue hermit crab, curious and quick, scuttling between coral. Clinically: low induction risk; most invasive Yersinia infections are treated with fluoroquinolones or TMP-SMX.",
+      "A tiny blue hermit crab, curious and quick, scuttling between coral. Clinically: low induction risk; most invasive Yersinia infections are self-limited — use Ceftriaxone or Cefepime when treatment is needed.",
   },
 
   {
@@ -165,7 +165,7 @@ export const ORGANISMS = [
     emoji: "🌵",
     difficulty: "easy",
     teachingPoint:
-      "Providencia species produce inducible AmpC. Usually low risk; carbapenems or fluoroquinolones may be needed for resistant strains.",
+      "Providencia species produce inducible AmpC. Usually low risk; carbapenems may be needed for resistant strains.",
     blurb:
       "A pink sea cucumber covered in spines — looks menacing but is surprisingly cute up close. Clinically: low induction risk AmpC; serious infections may require broader coverage.",
   },

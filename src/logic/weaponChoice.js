@@ -56,7 +56,7 @@ export function classifyChoice(org, weaponId, mutated) {
     };
   }
 
-  // Mutated form: Ceftriaxone, TMP-SMX, and Fluoroquinolones are ineffective
+  // Mutated form: Ceftriaxone is ineffective
   if (mutated && INEFFECTIVE_ON_MUTATED.includes(weaponId)) {
     return {
       status: "wrong",
@@ -117,39 +117,25 @@ export function classifyChoice(org, weaponId, mutated) {
   }
 
   if (weaponId === "carbapenem") {
+    if (tier === "high") {
+      return {
+        status: "acceptable",
+        heading: "Acceptable — but reserve it.",
+        feedback:
+          "Carbapenems are acceptable for high-risk AmpC organisms and confirmed-mutated forms, but Cefepime is the preferred first-line agent for " +
+          org.name +
+          ". Reserve carbapenems for confirmed resistance, ESBL/carbapenemase producers, or when all else fails.",
+        isCorrect: true,
+      };
+    }
+    // low-risk: reserve / incorrect
     return {
       status: "reserve",
       heading: "Works, but reserve it.",
       feedback:
         "Carbapenems are effective here, but they should be reserved for confirmed resistance, ESBL/carbapenemase producers, or when all else fails. " +
-        (tier === "high"
-          ? "Cefepime is the first-line choice for this organism."
-          : "Ceftriaxone or Cefepime is preferred."),
+        "Ceftriaxone or Cefepime is preferred for this low-risk organism.",
       isCorrect: false,
-    };
-  }
-
-  if (weaponId === "tmp_smx" || weaponId === "fluoroquinolone") {
-    if (tier === "high") {
-      return {
-        status: "wrong",
-        heading: "Not first-line for serious high-risk AmpC.",
-        feedback:
-          org.name +
-          " is a high-risk AmpC producer. " +
-          (weaponId === "tmp_smx" ? "TMP-SMX" : "Fluoroquinolones") +
-          " are not first-line empiric therapy for serious infections with this organism. Prefer Cefepime.",
-        isCorrect: false,
-      };
-    }
-    // low-risk: acceptable in select situations
-    return {
-      status: "acceptable",
-      heading: "Acceptable in select situations.",
-      feedback:
-        (weaponId === "tmp_smx" ? "TMP-SMX" : "Fluoroquinolones") +
-        " can be appropriate for susceptible low-risk AmpC organisms. Confirm susceptibilities and ensure this matches the clinical scenario.",
-      isCorrect: true,
     };
   }
 

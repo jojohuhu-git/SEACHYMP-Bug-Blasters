@@ -9,7 +9,7 @@
  *   Low-risk AmpC (Serratia, Aeromonas, Hafnia, Yersinia, Morganella, Providencia) →
  *     ceftriaxone often acceptable for routine infection, but cefepime for
  *     endovascular, prolonged, or high-inoculum infections.
- *   Carbapenems reserved; TMP-SMX/FQ acceptable for susceptible low-risk UTI/enteric.
+ *   Carbapenems reserved for confirmed resistance or when all else fails.
  *   Non-SEACHYMP distractors: release (colonizer/contaminant — don't treat).
  */
 
@@ -21,10 +21,10 @@ export const CASES = [
     organismId: "serratia",
     infection: "Pyelonephritis",
     sourceControl: "Achieved (no obstruction)",
-    duration: "7 days",
+    duration: "5 days",
     correctDecision: "ceftriaxone",
     rationale:
-      "Serratia is low-risk AmpC; for non-obstructed pyelonephritis with a short course, Ceftriaxone is clinically acceptable — context shifts the calculus more than organism alone.",
+      "Serratia is low-risk AmpC; for non-obstructed pyelonephritis a 5-day course of Ceftriaxone is clinically appropriate — the low induction risk supports a narrow, short regimen.",
   },
   {
     id: "case_serratia_endocarditis",
@@ -41,10 +41,10 @@ export const CASES = [
     organismId: "serratia",
     infection: "Catheter-related bloodstream infection",
     sourceControl: "Catheter removed",
-    duration: "14 days",
+    duration: "7 days",
     correctDecision: "ceftriaxone",
     rationale:
-      "Serratia bacteremia with catheter removal and no endovascular complication — low-risk AmpC + source control achieved makes a 14-day Ceftriaxone course reasonable.",
+      "Serratia bacteremia with catheter removal and no endovascular complication — low-risk AmpC with source control supports a 7-day Ceftriaxone course.",
   },
 
   // ── Enterobacter (high-risk AmpC) ────────────────────────────────────────
@@ -54,7 +54,7 @@ export const CASES = [
     organismId: "enterobacter",
     infection: "Bacteremia (line removed)",
     sourceControl: "Line removed",
-    duration: "14 days",
+    duration: "7 days",
     correctDecision: "cefepime",
     rationale:
       "Enterobacter is HIGH-risk AmpC; clinical failures with Ceftriaxone in Enterobacter bacteremia are well-documented — Cefepime is strongly preferred regardless of source control.",
@@ -64,7 +64,7 @@ export const CASES = [
     organismId: "enterobacter",
     infection: "Hospital-acquired pneumonia",
     sourceControl: "N/A",
-    duration: "8 days",
+    duration: "5–7 days",
     correctDecision: "cefepime",
     rationale:
       "High-risk AmpC + pulmonary infection with high bacterial burden — Cefepime is indicated; de-repression under third-generation cephalosporins is a real risk here.",
@@ -87,20 +87,10 @@ export const CASES = [
     organismId: "citrobacter",
     infection: "Uncomplicated UTI",
     sourceControl: "N/A",
-    duration: "5 days",
+    duration: "3–5 days",
     correctDecision: "cefepime",
     rationale:
-      "Citrobacter freundii is HIGH-risk AmpC — Cefepime is the safer choice even for shorter courses; fluoroquinolones or TMP-SMX are alternatives if susceptibilities confirm.",
-  },
-  {
-    id: "case_citrobacter_meningitis",
-    organismId: "citrobacter",
-    infection: "Post-neurosurgical meningitis",
-    sourceControl: "Drain repositioned",
-    duration: "21 days",
-    correctDecision: "cefepime",
-    rationale:
-      "High-risk AmpC meningitis requires a prolonged, CNS-penetrating regimen — Cefepime (or a carbapenem) is standard; Ceftriaxone risks AmpC de-repression over weeks.",
+      "Citrobacter freundii is HIGH-risk AmpC — Cefepime is the safer choice even for shorter courses to avoid selecting for AmpC de-repression.",
   },
 
   // ── Aeromonas (low-risk AmpC) ────────────────────────────────────────────
@@ -110,20 +100,10 @@ export const CASES = [
     organismId: "aeromonas",
     infection: "Soft-tissue infection (freshwater exposure)",
     sourceControl: "Debridement done",
-    duration: "7 days",
-    correctDecision: "fluoroquinolone",
+    duration: "5–7 days",
+    correctDecision: "ceftriaxone",
     rationale:
-      "Aeromonas wound infections following freshwater exposure respond well to fluoroquinolones or TMP-SMX; intrinsic ampicillin resistance makes these preferred over beta-lactams alone.",
-  },
-  {
-    id: "case_aeromonas_gastroenteritis",
-    organismId: "aeromonas",
-    infection: "Severe gastroenteritis (immunocompromised host)",
-    sourceControl: "N/A",
-    duration: "5 days",
-    correctDecision: "fluoroquinolone",
-    rationale:
-      "Aeromonas gastroenteritis in an immunocompromised patient warrants treatment; fluoroquinolones are first-line when therapy is indicated.",
+      "Aeromonas is low-risk AmpC; for a soft-tissue infection with adequate debridement, Ceftriaxone is appropriate — escalate to Cefepime only for serious high-inoculum infections.",
   },
 
   // ── Hafnia (low-risk AmpC) ────────────────────────────────────────────────
@@ -133,7 +113,7 @@ export const CASES = [
     organismId: "hafnia",
     infection: "Uncomplicated UTI",
     sourceControl: "N/A",
-    duration: "5 days",
+    duration: "3–5 days",
     correctDecision: "ceftriaxone",
     rationale:
       "Hafnia is low-risk AmpC; Ceftriaxone is appropriate for a straightforward UTI — the organism alone does not demand escalation.",
@@ -141,12 +121,12 @@ export const CASES = [
   {
     id: "case_hafnia_bacteremia",
     organismId: "hafnia",
-    infection: "Bacteremia (bowel source, surgically drained)",
-    sourceControl: "Drainage achieved",
-    duration: "14 days",
+    infection: "Intra-abdominal abscess (Hafnia)",
+    sourceControl: "Abscess drained",
+    duration: "4 days",
     correctDecision: "ceftriaxone",
     rationale:
-      "Low-risk AmpC bacteremia with source control; a 14-day Ceftriaxone course is reasonable — no strong evidence for routine escalation in Hafnia bacteremia.",
+      "Low-risk AmpC intra-abdominal abscess with source control achieved (drained) — with adequate drainage, a focused 4-day Ceftriaxone course is appropriate; source control is the key driver here.",
   },
 
   // ── Morganella (low-risk AmpC) ────────────────────────────────────────────
@@ -156,20 +136,20 @@ export const CASES = [
     organismId: "morganella",
     infection: "Surgical wound infection",
     sourceControl: "Debridement performed",
-    duration: "10 days",
+    duration: "5–7 days",
     correctDecision: "ceftriaxone",
     rationale:
-      "Morganella morganii is low induction risk; with adequate debridement and a moderate course, Ceftriaxone is clinically appropriate.",
+      "Morganella morganii is low induction risk; with adequate debridement, a 5–7-day Ceftriaxone course is clinically appropriate.",
   },
   {
     id: "case_morganella_uti",
     organismId: "morganella",
     infection: "Complicated UTI (obstructive uropathy, stent placed)",
     sourceControl: "Stent placed",
-    duration: "14 days",
+    duration: "7 days",
     correctDecision: "ceftriaxone",
     rationale:
-      "Low-risk AmpC UTI with source control achieved — Ceftriaxone covers the prolonged course adequately; re-evaluate if clinical deterioration occurs.",
+      "Low-risk AmpC UTI with source control achieved — a 7-day Ceftriaxone course is adequate; re-evaluate if clinical deterioration occurs.",
   },
 
   // ── Providencia (low-risk AmpC) ──────────────────────────────────────────
@@ -179,43 +159,20 @@ export const CASES = [
     organismId: "providencia",
     infection: "Catheter-associated UTI (long-term care)",
     sourceControl: "Catheter changed",
-    duration: "7 days",
+    duration: "5–7 days",
     correctDecision: "ceftriaxone",
     rationale:
-      "Providencia is low-risk AmpC; a 7-day Ceftriaxone course following catheter exchange is appropriate for uncomplicated catheter-associated UTI.",
+      "Providencia is low-risk AmpC; a 5–7-day Ceftriaxone course following catheter exchange is appropriate for uncomplicated catheter-associated UTI.",
   },
   {
     id: "case_providencia_bacteremia",
     organismId: "providencia",
     infection: "Bacteremia (urinary source, catheter removed)",
     sourceControl: "Catheter removed",
-    duration: "14 days",
+    duration: "7 days",
     correctDecision: "ceftriaxone",
     rationale:
-      "Low-risk AmpC bacteremia with source control — Ceftriaxone is adequate for a 14-day urinary-source bacteremia; no indication for routine Cefepime escalation.",
-  },
-
-  // ── Yersinia (low-risk AmpC) ─────────────────────────────────────────────
-
-  {
-    id: "case_yersinia_enteritis",
-    organismId: "yersinia",
-    infection: "Invasive enteritis (immunocompromised)",
-    sourceControl: "N/A",
-    duration: "5 days",
-    correctDecision: "fluoroquinolone",
-    rationale:
-      "Yersinia invasive infection in an immunocompromised host responds best to fluoroquinolones or TMP-SMX; Ceftriaxone is an alternative but FQs are preferred by most guidelines.",
-  },
-  {
-    id: "case_yersinia_bacteremia",
-    organismId: "yersinia",
-    infection: "Bacteremia (contaminated blood product exposure)",
-    sourceControl: "N/A",
-    duration: "14 days",
-    correctDecision: "fluoroquinolone",
-    rationale:
-      "Yersinia bacteremia from contaminated blood products is life-threatening; fluoroquinolone plus an aminoglycoside or third-generation cephalosporin is guideline-preferred — fluoroquinolone monotherapy is reasonable for step-down.",
+      "Low-risk AmpC bacteremia with source control — a 7-day Ceftriaxone course is appropriate for urinary-source bacteremia; no indication for routine Cefepime escalation.",
   },
 
   // ── Klebsiella aerogenes (high-risk AmpC, bonus) ──────────────────────────
@@ -225,7 +182,7 @@ export const CASES = [
     organismId: "klebsiella_aerogenes",
     infection: "Bacteremia (biliary source, ERCP drainage)",
     sourceControl: "Biliary drainage achieved",
-    duration: "14 days",
+    duration: "7 days",
     correctDecision: "cefepime",
     rationale:
       "Klebsiella aerogenes shares the high-risk AmpC profile of Enterobacter — Cefepime is preferred for bacteremia even after source control.",
@@ -235,7 +192,7 @@ export const CASES = [
     organismId: "klebsiella_aerogenes",
     infection: "Ventilator-associated pneumonia",
     sourceControl: "N/A",
-    duration: "8 days",
+    duration: "7 days",
     correctDecision: "cefepime",
     rationale:
       "High-risk AmpC VAP — Cefepime is strongly preferred; empiric Ceftriaxone in this setting risks clinical failure due to de-repression.",

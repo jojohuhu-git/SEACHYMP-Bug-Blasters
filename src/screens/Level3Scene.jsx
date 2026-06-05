@@ -235,7 +235,7 @@ function CaseCard({ org, caseData, mutated, onWeaponChoice, onClose }) {
       rationale =
         org.name +
         " is not an AmpC-producing SEACHYMP organism. Good stewardship = not treating colonizers or bystanders.";
-    } else if (mutated && ["ceftriaxone", "tmp_smx", "fluoroquinolone"].includes(weaponId)) {
+    } else if (mutated && ["ceftriaxone"].includes(weaponId)) {
       isCorrect = false;
       heading = "Ineffective against mutated form.";
       rationale =
@@ -368,8 +368,7 @@ function CaseCard({ org, caseData, mutated, onWeaponChoice, onClose }) {
 
           {mutated && (
             <div className="l3-mutation-warn">
-              <strong>Mutated form.</strong> Ceftriaxone, TMP-SMX, and fluoroquinolones
-              are no longer effective. Prefer Cefepime or a carbapenem.
+              <strong>Mutated form.</strong> Ceftriaxone is no longer effective. Prefer Cefepime or a carbapenem.
             </div>
           )}
         </div>
@@ -614,7 +613,7 @@ export default function Level3Scene({ chymp, onMenu }) {
     drawPlayer(ctx, chymp, s.playerX, s.playerY);
 
     rafRef.current = requestAnimationFrame(loop);
-  }, [chymp]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [chymp]);  
 
   // ── Canvas resize ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -632,7 +631,7 @@ export default function Level3Scene({ chymp, onMenu }) {
     const ro = new ResizeObserver(resize);
     ro.observe(canvas.parentElement);
     return () => ro.disconnect();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);  
 
   useEffect(() => {
     rafRef.current = requestAnimationFrame(loop);
@@ -660,7 +659,7 @@ export default function Level3Scene({ chymp, onMenu }) {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [capturedOrg, animatingShot]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [capturedOrg, animatingShot]);  
 
   // ── Mouse/touch events ────────────────────────────────────────────────────
   useEffect(() => {

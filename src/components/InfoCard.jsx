@@ -88,8 +88,7 @@ export default function InfoCard({ org, mutated, onDecide, onClose, alreadyInEnc
 
           {mutated && (
             <div className="info-mutation-warn">
-              <strong>Mutated form detected.</strong> Ceftriaxone, TMP-SMX, and
-              fluoroquinolones are now flagged ineffective. Prefer Cefepime or a carbapenem.
+              <strong>Mutated form detected.</strong> Ceftriaxone is now flagged ineffective. Prefer Cefepime; a carbapenem is acceptable when needed.
             </div>
           )}
 

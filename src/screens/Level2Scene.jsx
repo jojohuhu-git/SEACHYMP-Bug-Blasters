@@ -273,8 +273,7 @@ function WeaponChoiceCard({ org, mutated, onWeaponChoice, onClose }) {
           <p className="l2-blurb">{blurbFirst}</p>
           {mutated && (
             <div className="l2-mutation-warn">
-              <strong>Mutated form.</strong> Ceftriaxone, TMP-SMX, and fluoroquinolones
-              are no longer effective. Prefer Cefepime or a carbapenem.
+              <strong>Mutated form.</strong> Ceftriaxone is no longer effective. Prefer Cefepime or a carbapenem.
             </div>
           )}
         </div>
@@ -506,7 +505,7 @@ export default function Level2Scene({ chymp, onMenu }) {
     drawPlayer(ctx, chymp, s.playerX, s.playerY);
 
     rafRef.current = requestAnimationFrame(loop);
-  }, [chymp]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [chymp]);  
 
   // ── Canvas resize ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -524,7 +523,7 @@ export default function Level2Scene({ chymp, onMenu }) {
     const ro = new ResizeObserver(resize);
     ro.observe(canvas.parentElement);
     return () => ro.disconnect();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);  
 
   useEffect(() => {
     rafRef.current = requestAnimationFrame(loop);
@@ -552,7 +551,7 @@ export default function Level2Scene({ chymp, onMenu }) {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [capturedOrg]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [capturedOrg]);  
 
   // ── Mouse/touch events ────────────────────────────────────────────────────
   useEffect(() => {

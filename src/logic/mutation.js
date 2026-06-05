@@ -11,8 +11,8 @@
  *
  * In mutated form:
  *   - Visual: darker tint, spikier placeholder, `mutated: true` flag
- *   - Ceftriaxone / TMP-SMX / Fluoroquinolones are flagged ineffective
- *   - Player must switch to Cefepime or Carbapenem
+ *   - Ceftriaxone is flagged ineffective
+ *   - Player must switch to Cefepime or a carbapenem
  *
  * This module is UI-agnostic — it manages state and returns decisions.
  * The caller (canvas scene / game engine) is responsible for showing
@@ -23,7 +23,7 @@
 export const MUTATION_THRESHOLD = 3; // incorrect handlings of SAME TYPE before mutation
 
 /** Weapons that are INEFFECTIVE against a mutated organism */
-export const INEFFECTIVE_ON_MUTATED = ["ceftriaxone", "tmp_smx", "fluoroquinolone"];
+export const INEFFECTIVE_ON_MUTATED = ["ceftriaxone"];
 
 /**
  * MutationTracker — tracks per-organism-type mis-handle counts and mutation state.

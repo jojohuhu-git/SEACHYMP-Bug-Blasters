@@ -320,7 +320,7 @@ export default function Level1Scene({ chymp, onMenu }) {
     const ro = new ResizeObserver(resize);
     ro.observe(canvas.parentElement);
     return () => ro.disconnect();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);  
 
   // ── Start loop ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -353,7 +353,7 @@ export default function Level1Scene({ chymp, onMenu }) {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [capturedOrg]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [capturedOrg]);  
 
   // ── Mouse/touch events ────────────────────────────────────────────────────
   useEffect(() => {

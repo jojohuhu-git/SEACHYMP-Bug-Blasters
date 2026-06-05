@@ -145,8 +145,7 @@ export default function HowToPlay({ onBack }) {
             The organism has adapted. Resistance selected!
           </div>
           <p>
-            In mutated form, Ceftriaxone, TMP-SMX, and fluoroquinolones are flagged
-            ineffective. You must switch to <strong>Cefepime or a carbapenem</strong>.
+            In mutated form, Ceftriaxone is flagged ineffective. You must switch to <strong>Cefepime or a carbapenem</strong>.
             This is not a penalty — it is a teaching moment.
           </p>
         </section>
