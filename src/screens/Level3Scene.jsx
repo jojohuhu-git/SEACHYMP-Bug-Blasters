@@ -12,8 +12,8 @@ import {
   applyKillEffect,
   applyMutateFlash,
   applyPulseEffect,
-  drawOrganismEffects,
 } from "../logic/shotAnimation.js";
+import { drawOrganism } from "../logic/organismRenderer.js";
 import HUD from "../components/HUD.jsx";
 import "./Level3Scene.css";
 
@@ -76,83 +76,6 @@ function drawOcean(ctx, w, h, tick) {
     ctx.stroke();
   }
   ctx.restore();
-}
-
-// ── Colored-shape placeholder art (shared with Level2) ────────────────────────
-function darkenHex(hex, amount) {
-  const n = parseInt(hex.replace("#", ""), 16);
-  const r = Math.max(0, Math.round(((n >> 16) & 0xff) * (1 - amount)));
-  const g = Math.max(0, Math.round(((n >> 8) & 0xff) * (1 - amount)));
-  const b = Math.max(0, Math.round((n & 0xff) * (1 - amount)));
-  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
-}
-
-function drawOrganism(ctx, org, x, y, radius, mutated) {
-  if (org.fading) {
-    drawOrganismEffects(ctx, org, x, y, radius);
-    return;
-  }
-
-  const col = mutated ? darkenHex(org.color, 0.45) : org.color;
-  const r = mutated ? radius * 1.2 : radius;
-
-  ctx.save();
-  ctx.shadowColor = mutated ? "#ef4444" : col;
-  ctx.shadowBlur = mutated ? 18 : 10;
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.fillStyle = col + "44";
-  ctx.fill();
-  ctx.strokeStyle = col;
-  ctx.lineWidth = mutated ? 3 : 2;
-  ctx.stroke();
-  ctx.restore();
-
-  if (mutated) {
-    ctx.save();
-    ctx.strokeStyle = "#ef4444";
-    ctx.lineWidth = 1.5;
-    const spikes = 8;
-    for (let i = 0; i < spikes; i++) {
-      const angle = (i / spikes) * Math.PI * 2;
-      ctx.beginPath();
-      ctx.moveTo(x + Math.cos(angle) * (r + 4), y + Math.sin(angle) * (r + 4));
-      ctx.lineTo(x + Math.cos(angle) * (r + 10), y + Math.sin(angle) * (r + 10));
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  const monogram = monogramOf(org);
-  ctx.save();
-  ctx.font = `bold ${Math.round(r * 0.75)}px 'Segoe UI', sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = col;
-  ctx.globalAlpha = mutated ? 0.9 : 0.8;
-  ctx.fillText(monogram, x, y);
-  ctx.restore();
-
-  ctx.save();
-  ctx.font = "bold 10px 'Segoe UI', sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  ctx.fillStyle = mutated ? "#ef4444" : "#e8f4ff";
-  ctx.globalAlpha = 0.85;
-  ctx.fillText(org.name, x, y + r + 5);
-  ctx.restore();
-
-  if (mutated) {
-    ctx.save();
-    ctx.font = "bold 9px 'Segoe UI', sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    ctx.fillStyle = "#ef4444";
-    ctx.fillText("MUTATED", x, y + r + 17);
-    ctx.restore();
-  }
-
-  drawOrganismEffects(ctx, org, x, y, r);
 }
 
 function drawPlayer(ctx, chymp, x, y) {

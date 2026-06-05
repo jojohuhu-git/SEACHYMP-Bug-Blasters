@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { ORGANISMS, monogramOf } from "../data/organisms.js";
+import { ORGANISMS } from "../data/organisms.js";
 import { GameState } from "../logic/gameState.js";
 import { MutationTracker } from "../logic/mutation.js";
 import { getReefStage } from "../data/progression.js";
+import { drawOrganism } from "../logic/organismRenderer.js";
 import InfoCard from "../components/InfoCard.jsx";
 import HUD from "../components/HUD.jsx";
 import "./Level1Scene.css";
@@ -45,80 +46,6 @@ function randomOrganisms(canvasW, canvasH) {
     id_instance: `${org.id}_${i}`,
     mutated: false,
   }));
-}
-
-// ── Colored-shape placeholder art renderer ────────────────────────────────────
-// Uses organism.color and organism.name initial(s) — no emoji.
-// Real SVG art can be swapped in later via organism.artToken.
-function drawOrganism(ctx, org, x, y, radius, mutated) {
-  const col = mutated ? darkenHex(org.color, 0.45) : org.color;
-  const r = mutated ? radius * 1.2 : radius;
-
-  // Shadow / glow
-  ctx.save();
-  ctx.shadowColor = mutated ? "#ef4444" : col;
-  ctx.shadowBlur = mutated ? 18 : 10;
-
-  // Body circle (colored shape)
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.fillStyle = col + "44";
-  ctx.fill();
-  ctx.strokeStyle = col;
-  ctx.lineWidth = mutated ? 3 : 2;
-  ctx.stroke();
-
-  ctx.restore();
-
-  // Spiky mutation effect
-  if (mutated) {
-    ctx.save();
-    ctx.strokeStyle = "#ef4444";
-    ctx.lineWidth = 1.5;
-    const spikes = 8;
-    for (let i = 0; i < spikes; i++) {
-      const angle = (i / spikes) * Math.PI * 2;
-      const inner = r + 4;
-      const outer = r + 10;
-      ctx.beginPath();
-      ctx.moveTo(x + Math.cos(angle) * inner, y + Math.sin(angle) * inner);
-      ctx.lineTo(x + Math.cos(angle) * outer, y + Math.sin(angle) * outer);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  // Monogram label (1–2 chars derived from name — no emoji)
-  const monogram = monogramOf(org);
-  ctx.save();
-  ctx.font = `bold ${Math.round(r * 0.75)}px 'Segoe UI', sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = col;
-  ctx.globalAlpha = mutated ? 0.9 : 0.8;
-  ctx.fillText(monogram, x, y);
-  ctx.restore();
-
-  // Name label below
-  ctx.save();
-  ctx.font = "bold 10px 'Segoe UI', sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  ctx.fillStyle = mutated ? "#ef4444" : "#e8f4ff";
-  ctx.globalAlpha = 0.85;
-  ctx.fillText(org.name, x, y + r + 5);
-  ctx.restore();
-
-  // MUTATED label
-  if (mutated) {
-    ctx.save();
-    ctx.font = "bold 9px 'Segoe UI', sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    ctx.fillStyle = "#ef4444";
-    ctx.fillText("MUTATED", x, y + r + 17);
-    ctx.restore();
-  }
 }
 
 function drawPlayer(ctx, chymp, x, y) {
@@ -194,15 +121,6 @@ function drawOcean(ctx, w, h, tick) {
     ctx.stroke();
   }
   ctx.restore();
-}
-
-// ── Darken hex helper ─────────────────────────────────────────────────────────
-function darkenHex(hex, amount) {
-  const n = parseInt(hex.replace("#", ""), 16);
-  const r = Math.max(0, Math.round(((n >> 16) & 0xff) * (1 - amount)));
-  const g = Math.max(0, Math.round(((n >> 8) & 0xff) * (1 - amount)));
-  const b = Math.max(0, Math.round((n & 0xff) * (1 - amount)));
-  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
