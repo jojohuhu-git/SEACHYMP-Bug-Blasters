@@ -80,12 +80,15 @@ When changing a drug rule, update **every** surface that references it:
 and `HowToPlay`. Then grep `src/` to confirm no stale drug references remain.
 
 ## Deploy
-**No remote and no deploy pipeline are configured** (local-only repo; no
-`.github/workflows`, no gh-pages/Netlify/Vercel config; `dist/` gitignored;
-`vite.config.js` uses the default base). To publish, a hosting target must be set
-up first (e.g. GitHub repo + Pages with `base` set in `vite.config.js`, or
-Netlify/Vercel). Until then, "deploy" = `npm run build` + serve `dist/` locally
-(`npm run preview`).
+**Live on GitHub Pages:** https://jojohuhu-git.github.io/SEACHYMP-Bug-Blasters/
+- Remote: `origin` → `github.com/jojohuhu-git/SEACHYMP-Bug-Blasters` (public).
+- Every push to `main` triggers `.github/workflows/deploy.yml` (build →
+  `actions/upload-pages-artifact` → `actions/deploy-pages`). Pages source =
+  "GitHub Actions".
+- `vite.config.js` sets `base: '/SEACHYMP-Bug-Blasters/'` — asset paths MUST stay
+  under this subpath. If the repo is ever renamed, update `base` to match or the
+  deployed assets 404.
+- Local preview of the production build: `npm run build` + `npm run preview`.
 
 ## Known follow-ups
 - **15 ESLint errors deferred** (`react-hooks/refs`, `react-hooks/immutability`,

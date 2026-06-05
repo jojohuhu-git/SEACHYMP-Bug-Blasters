@@ -3,7 +3,9 @@
 _Last updated: 2026-06-04_
 
 ## Current state
-- Branch: `main` (local-only repo — **no git remote, no deploy pipeline**).
+- Branch: `main`, tracking `origin` (`github.com/jojohuhu-git/SEACHYMP-Bug-Blasters`, public).
+- **Live:** https://jojohuhu-git.github.io/SEACHYMP-Bug-Blasters/ (GitHub Pages,
+  auto-deploys on push to `main` via `.github/workflows/deploy.yml`).
 - Build: `npm run build` clean. Lint: 15 pre-existing errors remain (see Deferred).
 - No test suite.
 
@@ -40,9 +42,9 @@ mutation flow, and all 16 Level 3 case decisions match the new rules.
    - `no-unused-vars` — `_facingRight` (Level1 ~124), `SEACHYMP_IDS` (Level3 ~29,
      dead — completion uses `CASE_ORG_IDS`).
    These are React-correctness issues; test the mutation flow after fixing.
-2. **Deploy not set up.** Decide a host (GitHub Pages / Netlify / Vercel), add the
-   remote, and set `base` in `vite.config.js` if using Pages.
-3. **README is stale** — still describes Level 2/3 as deferred and lists 5 weapons.
+2. **README is stale** — still describes Level 2/3 as deferred and lists 5 weapons.
+3. **CI uses Node 20 actions** — GitHub posted deprecation warnings (Node 20 EOL on
+   runners Sept 2026). Bump action versions when convenient; non-blocking for now.
 4. **Next planned session: design work** (per user).
 
 ## How to make rule changes
