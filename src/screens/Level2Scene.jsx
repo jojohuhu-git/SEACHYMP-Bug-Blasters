@@ -4,7 +4,7 @@ import { WEAPONS } from "../data/weapons.js";
 import { GameState } from "../logic/gameState.js";
 import { MutationTracker } from "../logic/mutation.js";
 import { classifyChoice } from "../logic/weaponChoice.js";
-import { getReefStage } from "../data/progression.js";
+import { getReefStage, REEF_STAGES } from "../data/progression.js";
 import {
   createShot,
   tickShots,
@@ -14,6 +14,8 @@ import {
   applyPulseEffect,
 } from "../logic/shotAnimation.js";
 import { drawOrganism } from "../logic/organismRenderer.js";
+import { drawPlayer } from "../logic/playerRenderer.js";
+import { drawReef } from "../logic/reefRenderer.js";
 import HUD from "../components/HUD.jsx";
 import "./Level2Scene.css";
 
@@ -22,23 +24,32 @@ const PLAYER_RADIUS = 22;
 const PLAYER_SPEED = 3.2;
 const ORG_RADIUS_BASE = 24;
 const CAPTURE_DIST = 70;
-const ORBIT_COUNT = 8;
+const DISTRACTOR_COUNT = 4; // random non-SEACHYMP organisms mixed in each round
 
-// All 9 SEACHYMP types (isSeachymp=true), mix with distractors for the pool
-const SEACHYMP_IDS = ORGANISMS.filter((o) => o.isSeachymp).map((o) => o.id);
+// All 9 SEACHYMP types (isSeachymp=true) — every round spawns all of them.
+const SEACHYMP_ORGANISMS = ORGANISMS.filter((o) => o.isSeachymp);
+const SEACHYMP_IDS = SEACHYMP_ORGANISMS.map((o) => o.id);
+const DISTRACTOR_POOL = ORGANISMS.filter((o) => !o.isSeachymp);
 
-const LEVEL2_POOL = [
-  ...ORGANISMS.filter((o) => o.isSeachymp),
-  ...ORGANISMS.filter((o) => !o.isSeachymp).slice(0, 6),
-];
+// Reef-stage index (0 barren … 3 thriving) from the identified count.
+const reefStageIdxFor = (count) =>
+  Math.max(0, REEF_STAGES.findIndex((s) => s.id === getReefStage(count).id));
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 function randomOrganisms(canvasW, canvasH) {
-  const pool = [...LEVEL2_POOL];
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  return pool.slice(0, ORBIT_COUNT).map((org, i) => ({
+  // Every round contains all 9 SEACHYMP types + a few distractors, so a single
+  // playthrough can treat them all and complete the level.
+  const distractors = shuffle(DISTRACTOR_POOL).slice(0, DISTRACTOR_COUNT);
+  const chosen = shuffle([...SEACHYMP_ORGANISMS, ...distractors]);
+  return chosen.map((org, i) => ({
     ...org,
     x: 80 + Math.random() * (canvasW - 160),
     y: 80 + Math.random() * (canvasH - 160),
@@ -52,33 +63,6 @@ function randomOrganisms(canvasW, canvasH) {
     mutateFlash: null,
     pulseProgress: null,
   }));
-}
-
-function drawPlayer(ctx, chymp, x, y) {
-  const r = PLAYER_RADIUS;
-  const color = chymp?.color || "#38b2e8";
-  const mono = chymp?.name ? chymp.name.slice(0, 2).toUpperCase() : "CH";
-
-  ctx.save();
-  ctx.shadowColor = color;
-  ctx.shadowBlur = 14;
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.fillStyle = color + "55";
-  ctx.fill();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
-  ctx.restore();
-
-  ctx.save();
-  ctx.font = `bold ${Math.round(r * 0.8)}px 'Segoe UI', sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = color;
-  ctx.globalAlpha = 0.9;
-  ctx.fillText(mono, x, y);
-  ctx.restore();
 }
 
 // Level 2 uses a distinct teal/emerald reef palette so it reads differently
@@ -320,6 +304,12 @@ export default function Level2Scene({ chymp, onMenu }) {
 
   // Tracks which SEACHYMP types have been correctly treated this session
   const treatedRef = useRef(GameState.getL2Treated());
+  const roundTreatedRef = useRef(new Set()); // SEACHYMP types treated THIS round
+
+  // Keep the canvas reef in sync with the identified count (drives stage 0–3).
+  useEffect(() => {
+    if (stateRef.current) stateRef.current.reefStageIdx = reefStageIdxFor(identified);
+  }, [identified]);
 
   function initState(w, h) {
     stateRef.current = {
@@ -333,6 +323,7 @@ export default function Level2Scene({ chymp, onMenu }) {
       w,
       h,
       shots: [],
+      reefStageIdx: reefStageIdxFor(GameState.getProgress().identifiedCount),
     };
   }
 
@@ -419,12 +410,13 @@ export default function Level2Scene({ chymp, onMenu }) {
     }
 
     drawOcean(ctx, s.w, s.h, s.tick);
+    drawReef(ctx, s.w, s.h, s.reefStageIdx, s.tick);
     s.organisms.forEach((org) => {
       const mutated = trackerRef.current.isMutated(org.id);
       drawOrganism(ctx, org, org.x, org.y, ORG_RADIUS_BASE, mutated);
     });
     if (s.shots) drawShots(ctx, s.shots);
-    drawPlayer(ctx, chymp, s.playerX, s.playerY);
+    drawPlayer(ctx, chymp, s.playerX, s.playerY, s.facingRight);
 
     rafRef.current = requestAnimationFrame(loopRef.current);
   }, [chymp]);
@@ -634,9 +626,11 @@ export default function Level2Scene({ chymp, onMenu }) {
       }
 
       if (org.isSeachymp) {
-        const newTreated = GameState.addL2Treated(org.id);
-        treatedRef.current = new Set(newTreated);
-        const allDone = SEACHYMP_IDS.every((id) => newTreated.has(id));
+        GameState.addL2Treated(org.id); // persisted progress
+        roundTreatedRef.current.add(org.id);
+        treatedRef.current = new Set(roundTreatedRef.current);
+        // Complete when all 9 SEACHYMP have been treated THIS round.
+        const allDone = SEACHYMP_IDS.every((id) => roundTreatedRef.current.has(id));
         if (allDone) {
           pendingCompleteRef.current = true;
         }

@@ -1,3 +1,4 @@
+import ArtToken from "../art/ArtToken.jsx";
 import "./HUD.css";
 
 export default function HUD({ chymp, identified, reefStage, onMenu }) {
@@ -7,14 +8,24 @@ export default function HUD({ chymp, identified, reefStage, onMenu }) {
       <div className="hud-left">
         <div
           className="hud-avatar"
-          style={{
-            borderColor: chymp?.color || "#38b2e8",
-            background: (chymp?.color || "#38b2e8") + "22",
-            color: chymp?.color || "#38b2e8",
-          }}
+          style={{ borderColor: chymp?.color || "#38b2e8" }}
           aria-label={`Playing as ${chymp?.name || "Chymp"}`}
         >
-          {chymp?.name ? chymp.name.slice(0, 2).toUpperCase() : "CH"}
+          <ArtToken
+            token={chymp?.id}
+            size={34}
+            fallback={
+              <span
+                className="hud-avatar-mono"
+                style={{
+                  background: (chymp?.color || "#38b2e8") + "22",
+                  color: chymp?.color || "#38b2e8",
+                }}
+              >
+                {chymp?.name ? chymp.name.slice(0, 2).toUpperCase() : "CH"}
+              </span>
+            }
+          />
         </div>
         <span className="hud-chymp-name">{chymp?.name || "Chymp"}</span>
       </div>

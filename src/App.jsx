@@ -1,9 +1,7 @@
 import { useState, useCallback } from "react";
-import { GameState } from "./logic/gameState.js";
 import { SQUAD } from "./data/squad.js";
 
 import TitleScreen from "./screens/TitleScreen.jsx";
-import SquadSelect from "./screens/SquadSelect.jsx";
 import HowToPlay from "./screens/HowToPlay.jsx";
 import Level1Scene from "./screens/Level1Scene.jsx";
 import Level2Scene from "./screens/Level2Scene.jsx";
@@ -19,7 +17,6 @@ import WeaponsScreen from "./screens/WeaponsScreen.jsx";
  */
 const SCREENS = {
   TITLE: "title",
-  SQUAD: "squad",
   HOW_TO_PLAY: "how_to_play",
   LEVEL1: "level1",
   LEVEL2: "level2",
@@ -35,11 +32,8 @@ export default function App() {
   // prevScreen is used to know where to return from sub-screens
   const [prevScreen, setPrevScreen] = useState(SCREENS.TITLE);
 
-  // Resolved chymp — read from localStorage or pick default
-  const [chymp, setChymp] = useState(() => {
-    const saved = GameState.getSquad();
-    return saved ? (SQUAD.find((c) => c.id === saved) || SQUAD[0]) : null;
-  });
+  // Player character is always Captain Chymp (squad selection was removed).
+  const chymp = SQUAD[0];
 
   const go = useCallback((nextScreen, savePrev = false) => {
     if (savePrev) setPrevScreen(screen);
@@ -48,33 +42,15 @@ export default function App() {
 
   // ── From TITLE ────────────────────────────────────────────────────────────
   function handlePlay() {
-    // If no chymp chosen yet, go to squad select; otherwise straight to Level1
-    if (!chymp) {
-      go(SCREENS.SQUAD);
-    } else {
-      go(SCREENS.LEVEL1);
-    }
+    go(SCREENS.LEVEL1);
   }
 
   function handlePlayLevel2() {
-    if (!chymp) {
-      go(SCREENS.SQUAD);
-    } else {
-      go(SCREENS.LEVEL2);
-    }
+    go(SCREENS.LEVEL2);
   }
 
   function handlePlayLevel3() {
-    if (!chymp) {
-      go(SCREENS.SQUAD);
-    } else {
-      go(SCREENS.LEVEL3);
-    }
-  }
-
-  function handleSquadSelect(selectedChymp) {
-    setChymp(selectedChymp);
-    go(SCREENS.LEVEL1);
+    go(SCREENS.LEVEL3);
   }
 
   // ── In-game menu helpers ──────────────────────────────────────────────────
@@ -109,14 +85,6 @@ export default function App() {
           onEncyclopedia={() => { setPrevScreen(SCREENS.TITLE); go(SCREENS.ENCYCLOPEDIA); }}
           onReef={() => { setPrevScreen(SCREENS.TITLE); go(SCREENS.REEF); }}
           onWeapons={() => { setPrevScreen(SCREENS.TITLE); go(SCREENS.WEAPONS); }}
-        />
-      );
-
-    case SCREENS.SQUAD:
-      return (
-        <SquadSelect
-          onSelect={handleSquadSelect}
-          onBack={() => go(SCREENS.TITLE)}
         />
       );
 

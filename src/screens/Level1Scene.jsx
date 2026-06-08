@@ -2,8 +2,10 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { ORGANISMS } from "../data/organisms.js";
 import { GameState } from "../logic/gameState.js";
 import { MutationTracker } from "../logic/mutation.js";
-import { getReefStage } from "../data/progression.js";
+import { getReefStage, REEF_STAGES } from "../data/progression.js";
 import { drawOrganism } from "../logic/organismRenderer.js";
+import { drawPlayer } from "../logic/playerRenderer.js";
+import { drawReef } from "../logic/reefRenderer.js";
 import InfoCard from "../components/InfoCard.jsx";
 import HUD from "../components/HUD.jsx";
 import "./Level1Scene.css";
@@ -13,29 +15,33 @@ const PLAYER_RADIUS = 22;
 const PLAYER_SPEED = 3.2;
 const ORG_RADIUS_BASE = 24;
 const CAPTURE_DIST = 70;   // pixels — proximity for keyboard capture
-const ORBIT_COUNT = 8;     // drift organisms to show at once (mix of SEACHYMP + distractors)
+const DISTRACTOR_COUNT = 4; // random non-SEACHYMP organisms mixed in each round
 
 // The complete set of SEACHYMP targets that must be correctly identified
 // to complete the patrol (all isSeachymp organisms, including the bonus).
-const SEACHYMP_TARGET_IDS = ORGANISMS
-  .filter((o) => o.isSeachymp)
-  .map((o) => o.id);
+const SEACHYMP_ORGANISMS = ORGANISMS.filter((o) => o.isSeachymp);
+const SEACHYMP_TARGET_IDS = SEACHYMP_ORGANISMS.map((o) => o.id);
+const DISTRACTOR_POOL = ORGANISMS.filter((o) => !o.isSeachymp);
 
-// Mix of SEACHYMP + distractor organisms for Level 1 pool
-const LEVEL1_POOL = [
-  ...ORGANISMS.filter((o) => o.isSeachymp).slice(0, 8), // core SEACHYMP
-  ORGANISMS.find((o) => o.id === "klebsiella_aerogenes"),  // bonus
-  ...ORGANISMS.filter((o) => !o.isSeachymp),              // distractors
-].filter(Boolean);
+// Reef-stage index (0 barren … 3 thriving) from the identified count.
+const reefStageIdxFor = (count) =>
+  Math.max(0, REEF_STAGES.findIndex((s) => s.id === getReefStage(count).id));
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 function randomOrganisms(canvasW, canvasH) {
-  const pool = [...LEVEL1_POOL];
-  // Shuffle
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  return pool.slice(0, ORBIT_COUNT).map((org, i) => ({
+  // Every round contains ALL 9 SEACHYMP targets plus a few random distractors,
+  // so a single playthrough can identify them all and complete the patrol.
+  const distractors = shuffle(DISTRACTOR_POOL).slice(0, DISTRACTOR_COUNT);
+  const chosen = shuffle([...SEACHYMP_ORGANISMS, ...distractors]);
+  return chosen.map((org, i) => ({
     ...org,
     x: 80 + Math.random() * (canvasW - 160),
     y: 80 + Math.random() * (canvasH - 160),
@@ -46,38 +52,6 @@ function randomOrganisms(canvasW, canvasH) {
     id_instance: `${org.id}_${i}`,
     mutated: false,
   }));
-}
-
-function drawPlayer(ctx, chymp, x, y) {
-  const r = PLAYER_RADIUS;
-  const color = chymp?.color || "#38b2e8";
-  // Monogram from chymp name
-  const mono = chymp?.name ? chymp.name.slice(0, 2).toUpperCase() : "CH";
-
-  ctx.save();
-  ctx.shadowColor = color;
-  ctx.shadowBlur = 14;
-
-  // Body circle
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.fillStyle = color + "55";
-  ctx.fill();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
-
-  ctx.restore();
-
-  // Monogram
-  ctx.save();
-  ctx.font = `bold ${Math.round(r * 0.8)}px 'Segoe UI', sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = color;
-  ctx.globalAlpha = 0.9;
-  ctx.fillText(mono, x, y);
-  ctx.restore();
 }
 
 // ── Ocean background painter ──────────────────────────────────────────────────
@@ -130,6 +104,8 @@ export default function Level1Scene({ chymp, onMenu }) {
   const rafRef = useRef(null);
   const loopRef = useRef(null); // holds latest loop fn so callback can self-schedule
   const trackerRef = useRef(new MutationTracker());
+  const captureTimerRef = useRef(null); // delays the info card so the net throw is visible
+  const roundIdentifiedRef = useRef(new Set()); // SEACHYMP ids identified THIS round
 
   const [capturedOrg, setCapturedOrg] = useState(null);   // info card open
   const [capturedOrgMutated, setCapturedOrgMutated] = useState(false); // mutated snapshot at capture time
@@ -153,6 +129,8 @@ export default function Level1Scene({ chymp, onMenu }) {
       keys: {},
       touch: { active: false, lastX: 0, lastY: 0 },
       tick: 0,
+      netAnim: null, // { tx, ty, t } — net-throw flourish on capture
+      reefStageIdx: reefStageIdxFor(GameState.getProgress().identifiedCount),
       w,
       h,
     };
@@ -212,11 +190,44 @@ export default function Level1Scene({ chymp, onMenu }) {
 
     // Draw
     drawOcean(ctx, s.w, s.h, s.tick);
+    drawReef(ctx, s.w, s.h, s.reefStageIdx, s.tick);
     s.organisms.forEach((org) => {
       const mutated = trackerRef.current.isMutated(org.id);
       drawOrganism(ctx, org, org.x, org.y, ORG_RADIUS_BASE, mutated);
     });
     drawPlayer(ctx, chymp, s.playerX, s.playerY, s.facingRight);
+
+    // Net-throw flourish: a line from the diver to the target plus an expanding
+    // hoop, drawn for the ~14 frames between the capture press and the card.
+    if (s.netAnim) {
+      const n = s.netAnim;
+      n.t++;
+      const prog = Math.min(1, n.t / 14);
+      const hx = s.playerX + (n.tx - s.playerX) * prog;
+      const hy = s.playerY + (n.ty - s.playerY) * prog;
+      ctx.save();
+      ctx.globalAlpha = 0.85 * (1 - prog * 0.3);
+      ctx.strokeStyle = "#eaf6ff";
+      ctx.lineWidth = 2;
+      // Throw line
+      ctx.beginPath();
+      ctx.moveTo(s.playerX, s.playerY);
+      ctx.lineTo(hx, hy);
+      ctx.stroke();
+      // Net hoop (grows as it lands)
+      const rr = 8 + prog * 22;
+      ctx.beginPath();
+      ctx.arc(hx, hy, rr, 0, Math.PI * 2);
+      ctx.stroke();
+      // Net mesh
+      ctx.globalAlpha *= 0.5;
+      ctx.beginPath();
+      ctx.moveTo(hx - rr, hy); ctx.lineTo(hx + rr, hy);
+      ctx.moveTo(hx, hy - rr); ctx.lineTo(hx, hy + rr);
+      ctx.stroke();
+      ctx.restore();
+      if (n.t > 14) s.netAnim = null;
+    }
 
     rafRef.current = requestAnimationFrame(loopRef.current);
   }, [chymp]);
@@ -251,6 +262,27 @@ export default function Level1Scene({ chymp, onMenu }) {
     return () => cancelAnimationFrame(rafRef.current);
   }, [loop]);
 
+  // Keep the canvas reef in sync with the identified count (drives stage 0–3).
+  useEffect(() => {
+    if (stateRef.current) stateRef.current.reefStageIdx = reefStageIdxFor(identified);
+  }, [identified]);
+
+  // ── Capture: throw the net, then open the info card a beat later ───────────
+  const beginCapture = useCallback((org) => {
+    const s = stateRef.current;
+    if (!s || captureTimerRef.current) return; // ignore while a throw is in flight
+    s.netAnim = { tx: org.x, ty: org.y, t: 0 };
+    const mutated = trackerRef.current.isMutated(org.id);
+    captureTimerRef.current = setTimeout(() => {
+      captureTimerRef.current = null;
+      setCapturedOrg(org);
+      setCapturedOrgMutated(mutated);
+    }, 240);
+  }, []);
+
+  // Clear any pending capture timer on unmount.
+  useEffect(() => () => clearTimeout(captureTimerRef.current), []);
+
   // ── Keyboard capture helper ───────────────────────────────────────────────
   const tryCapture = useCallback(() => {
     const s = stateRef.current;
@@ -262,11 +294,8 @@ export default function Level1Scene({ chymp, onMenu }) {
       if (dist < CAPTURE_DIST && (!best || dist < best.dist)) return { org, dist };
       return best;
     }, null);
-    if (nearest) {
-      setCapturedOrg(nearest.org);
-      setCapturedOrgMutated(trackerRef.current.isMutated(nearest.org.id));
-    }
-  }, []);
+    if (nearest) beginCapture(nearest.org);
+  }, [beginCapture]);
 
   // ── Keyboard input ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -320,10 +349,7 @@ export default function Level1Scene({ chymp, onMenu }) {
         const dy = org.y - pos.y;
         return Math.sqrt(dx * dx + dy * dy) <= ORG_RADIUS_BASE + 14;
       });
-      if (hit) {
-        setCapturedOrg(hit);
-        setCapturedOrgMutated(trackerRef.current.isMutated(hit.id));
-      }
+      if (hit) beginCapture(hit);
     }
 
     function onTouchStart(e) {
@@ -338,8 +364,7 @@ export default function Level1Scene({ chymp, onMenu }) {
         return Math.sqrt(dx * dx + dy * dy) <= ORG_RADIUS_BASE + 20;
       });
       if (hit && !capturedOrg) {
-        setCapturedOrg(hit);
-        setCapturedOrgMutated(trackerRef.current.isMutated(hit.id));
+        beginCapture(hit);
         return;
       }
       // Otherwise start swimming
@@ -372,7 +397,7 @@ export default function Level1Scene({ chymp, onMenu }) {
       canvas.removeEventListener("touchmove", onTouchMove);
       canvas.removeEventListener("touchend", onTouchEnd);
     };
-  }, [capturedOrg]);
+  }, [capturedOrg, beginCapture]);
 
   // ── Info card decision handler ────────────────────────────────────────────
   // Called by InfoCard when the player makes their identify/ignore choice.
@@ -385,6 +410,10 @@ export default function Level1Scene({ chymp, onMenu }) {
       (decision === "ignore" && !org.isSeachymp);
 
     if (correct) {
+      // Remove the correctly-handled organism from the board (it's "caught").
+      const s = stateRef.current;
+      if (s) s.organisms = s.organisms.filter((o) => o.id_instance !== org.id_instance);
+
       GameState.addToEncyclopedia(org.id);
       const prog = org.isSeachymp
         ? GameState.incrementIdentified()
@@ -397,12 +426,13 @@ export default function Level1Scene({ chymp, onMenu }) {
       if (org.riskTier === "high") GameState.awardBadge("cefepime_commander");
       if (prog.ignoredCount >= 3) GameState.awardBadge("stewardship_sailor");
 
-      // Track patrol completion for SEACHYMP targets
+      // Track patrol completion for SEACHYMP targets — based on THIS round so a
+      // returning player with saved progress still plays a full round.
       if (org.isSeachymp) {
-        const newTargets = GameState.addIdentifiedTarget(org.id);
-        identifiedTargetsRef.current = new Set(newTargets);
-        // Check if all targets have been identified
-        const allDone = SEACHYMP_TARGET_IDS.every((id) => newTargets.has(id));
+        GameState.addIdentifiedTarget(org.id); // persisted (drives master badge)
+        roundIdentifiedRef.current.add(org.id);
+        identifiedTargetsRef.current = new Set(roundIdentifiedRef.current);
+        const allDone = SEACHYMP_TARGET_IDS.every((id) => roundIdentifiedRef.current.has(id));
         if (allDone) {
           GameState.awardBadge("master_seachymp");
           // Signal patrol complete AFTER this card is dismissed

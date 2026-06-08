@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { TitleMascot } from "../art/ART_COMPONENTS.js";
 import "./TitleScreen.css";
 
 export default function TitleScreen({ onPlay, onPlayLevel2, onPlayLevel3, onHowToPlay, onEncyclopedia, onReef, onWeapons }) {
@@ -18,6 +19,9 @@ export default function TitleScreen({ onPlay, onPlayLevel2, onPlayLevel3, onHowT
       <div className="title-content">
         {/* Logo / title */}
         <div className="title-logo" aria-label="SEACHYMP Bug Blasters game logo">
+          <div className="title-mascot-wrap" aria-hidden="true">
+            <TitleMascot size={96} />
+          </div>
           <h1 className="title-name">
             <span className="title-seachymp">SEACHYMP</span>
             <span className="title-subtitle-inline"> Bug Blasters</span>

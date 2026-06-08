@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { WEAPONS } from "../data/weapons.js";
+import ArtToken from "../art/ArtToken.jsx";
 import "./WeaponsScreen.css";
 
 export default function WeaponsScreen({ onBack }) {
@@ -27,14 +28,20 @@ export default function WeaponsScreen({ onBack }) {
               style={{ borderLeftColor: w.color }}
             >
               <div className="weapon-header">
-                {/* Colored shape placeholder art — no emoji */}
-                <div
-                  className="weapon-shape"
-                  style={{ background: (w.color || "#38b2e8") + "22", borderColor: w.color || "#38b2e8", color: w.color || "#38b2e8" }}
-                  aria-hidden="true"
-                >
-                  {w.name.slice(0, 2).toUpperCase()}
-                </div>
+                {/* Weapon art — SVG when available, monogram placeholder otherwise */}
+                <ArtToken
+                  token={w.artToken}
+                  size={64}
+                  fallback={
+                    <div
+                      className="weapon-shape"
+                      style={{ background: (w.color || "#38b2e8") + "22", borderColor: w.color || "#38b2e8", color: w.color || "#38b2e8" }}
+                      aria-hidden="true"
+                    >
+                      {w.name.slice(0, 2).toUpperCase()}
+                    </div>
+                  }
+                />
                 <div>
                   <div className="weapon-name">{w.name}</div>
                   <div className="weapon-nickname">&ldquo;{w.nickname}&rdquo;</div>

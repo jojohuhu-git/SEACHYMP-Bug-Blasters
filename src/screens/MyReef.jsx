@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { REEF_STAGES, BADGES, getReefStage } from "../data/progression.js";
 import { GameState } from "../logic/gameState.js";
+import ArtToken from "../art/ArtToken.jsx";
 import "./MyReef.css";
 
 // Short label initials for reef stages (no emoji)
@@ -30,13 +31,19 @@ export default function MyReef({ onBack }) {
 
         {/* Current stage */}
         <div className="reef-stage-card card">
-          <div
-            className="reef-stage-shape"
-            style={{ background: (stage.color || "#94a3b8") + "22", borderColor: stage.color || "#94a3b8", color: stage.color || "#94a3b8" }}
-            aria-hidden="true"
-          >
-            {STAGE_INITIALS[stage.id] || stage.label.slice(0, 2).toUpperCase()}
-          </div>
+          <ArtToken
+            token={stage.id}
+            size={56}
+            fallback={
+              <div
+                className="reef-stage-shape"
+                style={{ background: (stage.color || "#94a3b8") + "22", borderColor: stage.color || "#94a3b8", color: stage.color || "#94a3b8" }}
+                aria-hidden="true"
+              >
+                {STAGE_INITIALS[stage.id] || stage.label.slice(0, 2).toUpperCase()}
+              </div>
+            }
+          />
           <div className="reef-stage-info">
             <div className="reef-stage-name">{stage.label}</div>
             <p className="reef-stage-desc">{stage.description}</p>
@@ -50,13 +57,19 @@ export default function MyReef({ onBack }) {
             const isCurrent = s.id === stage.id;
             return (
               <div key={s.id} className={`reef-stage-step ${reached ? "reef-stage-step--reached" : ""} ${isCurrent ? "reef-stage-step--current" : ""}`}>
-                <span
-                  className="reef-step-shape"
-                  style={reached ? { background: (s.color || "#94a3b8") + "33", borderColor: s.color || "#94a3b8", color: s.color || "#94a3b8" } : {}}
-                  aria-hidden="true"
-                >
-                  {STAGE_INITIALS[s.id] || s.label.slice(0, 2).toUpperCase()}
-                </span>
+                <ArtToken
+                  token={s.id}
+                  size={28}
+                  fallback={
+                    <span
+                      className="reef-step-shape"
+                      style={reached ? { background: (s.color || "#94a3b8") + "33", borderColor: s.color || "#94a3b8", color: s.color || "#94a3b8" } : {}}
+                      aria-hidden="true"
+                    >
+                      {STAGE_INITIALS[s.id] || s.label.slice(0, 2).toUpperCase()}
+                    </span>
+                  }
+                />
                 <span className="reef-step-label">{s.label}</span>
                 <span className="reef-step-req">
                   {i === 0 ? "Start" : `${s.minCount}+ identified`}
@@ -86,12 +99,18 @@ export default function MyReef({ onBack }) {
             const earned = !!earnedBadges[badge.id];
             return (
               <div key={badge.id} className={`reef-badge card ${earned ? "reef-badge--earned" : "reef-badge--locked"}`}>
-                <div
-                  className="reef-badge-shape"
-                  aria-hidden="true"
-                >
-                  {earned ? badge.id.slice(0, 2).toUpperCase() : "—"}
-                </div>
+                <ArtToken
+                  token={badge.id}
+                  size={44}
+                  fallback={
+                    <div
+                      className="reef-badge-shape"
+                      aria-hidden="true"
+                    >
+                      {earned ? badge.id.slice(0, 2).toUpperCase() : "—"}
+                    </div>
+                  }
+                />
                 <div className="reef-badge-name">{badge.name}</div>
                 <div className="reef-badge-desc">{badge.description}</div>
               </div>
