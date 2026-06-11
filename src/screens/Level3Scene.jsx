@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { ORGANISMS, monogramOf } from "../data/organisms.js";
+import { ORGANISMS } from "../data/organisms.js";
+import OrganismImage from "../components/OrganismImage.jsx";
 import { WEAPONS } from "../data/weapons.js";
 import { CASES } from "../data/cases.js";
 import { GameState } from "../logic/gameState.js";
@@ -14,7 +15,7 @@ import {
   applyPulseEffect,
 } from "../logic/shotAnimation.js";
 import { drawOrganism } from "../logic/organismRenderer.js";
-import { drawPlayer } from "../logic/playerRenderer.js";
+import { drawPlayer, triggerPose } from "../logic/playerRenderer.js";
 import { drawReef } from "../logic/reefRenderer.js";
 import HUD from "../components/HUD.jsx";
 import "./Level3Scene.css";
@@ -128,7 +129,6 @@ function CaseCard({ org, caseData, mutated, onWeaponChoice, onClose }) {
     ? org.blurb.split(/\.\s+/)[0].replace(/\.$/, "") + "."
     : "";
   const artBg = (org.color || "#38b2e8") + "22";
-  const monogram = monogramOf(org);
 
   function handleWeapon(weaponId) {
     let isCorrect;
@@ -149,6 +149,15 @@ function CaseCard({ org, caseData, mutated, onWeaponChoice, onClose }) {
         "This organism has adapted — " +
         weaponId.replace("_", "-") +
         " is no longer effective. Switch to Cefepime or a carbapenem.";
+    } else if (mutated && (weaponId === "cefepime" || weaponId === "carbapenem")) {
+      // Mutated/de-repressed: Cefepime and a carbapenem are co-equal — accept
+      // either, overriding the static case correctDecision so the "Preferred:
+      // Cefepime" line never contradicts the mutated state.
+      isCorrect = true;
+      heading = "Correct — effective against the mutated form.";
+      rationale =
+        org.name +
+        " has de-repressed its AmpC. Cefepime and a carbapenem are both appropriate now; Ceftriaxone is no longer effective.";
     } else if (caseData && weaponId === caseData.correctDecision) {
       isCorrect = true;
       heading = "Correct choice for this case.";
@@ -231,9 +240,7 @@ function CaseCard({ org, caseData, mutated, onWeaponChoice, onClose }) {
             className="l3-art"
             style={{ background: artBg, border: `2px solid ${org.color || "#38b2e8"}` }}
           >
-            <span className="l3-art-mono" style={{ color: org.color || "#38b2e8" }}>
-              {monogram}
-            </span>
+            <OrganismImage org={org} size={56} />
             {mutated && <span className="l3-mutated-tag">MUTATED</span>}
           </div>
           <div className="l3-title-block">
@@ -275,7 +282,7 @@ function CaseCard({ org, caseData, mutated, onWeaponChoice, onClose }) {
 
           {mutated && (
             <div className="l3-mutation-warn">
-              <strong>Mutated form.</strong> Ceftriaxone is no longer effective. Prefer Cefepime or a carbapenem.
+              <strong>Mutated form.</strong> Ceftriaxone is no longer effective — Cefepime and a carbapenem are both appropriate.
             </div>
           )}
         </div>
@@ -387,6 +394,9 @@ export default function Level3Scene({ chymp, onMenu }) {
   const [animatingShot, setAnimatingShot] = useState(false);
   // Ref mirror so the loop closure doesn't need animatingShot in its dep array
   const animatingShotRef = useRef(false);
+  // Holds {outcome, orgInstanceId} while a kill/mutate/pulse effect plays on the
+  // canvas — the result card stays hidden until the effect finishes.
+  const pendingRevealRef = useRef(null);
 
   const [mutationBanner, setMutationBanner] = useState(null);
   const [identified, setIdentified] = useState(
@@ -437,9 +447,14 @@ export default function Level3Scene({ chymp, onMenu }) {
     } else if (shot.outcome === "pulse" && org) {
       org.pulseProgress = 0;
     }
-    // Reveal the card result
-    animatingShotRef.current = false;
-    setAnimatingShot(false);
+    // Keep the card hidden until the canvas effect finishes playing — the loop
+    // reveals the result once it's done. Reveal now if the org is already gone.
+    if (org) {
+      pendingRevealRef.current = { outcome: shot.outcome, orgInstanceId: shot.orgInstanceId };
+    } else {
+      animatingShotRef.current = false;
+      setAnimatingShot(false);
+    }
   }
 
   const loop = useCallback(() => {
@@ -519,6 +534,21 @@ export default function Level3Scene({ chymp, onMenu }) {
       s.shots = s.shots.filter((sh) => !sh.done);
     }
 
+    // Reveal the weapon-result card once the kill/mutate/pulse effect finishes.
+    if (pendingRevealRef.current) {
+      const pr = pendingRevealRef.current;
+      const o = s.organisms.find((x) => x.id_instance === pr.orgInstanceId);
+      const done =
+        pr.outcome === "kill" ? !o :
+        pr.outcome === "mutate" ? (!o || o.mutateFlash == null) :
+        (!o || o.pulseProgress == null);
+      if (done) {
+        pendingRevealRef.current = null;
+        animatingShotRef.current = false;
+        setAnimatingShot(false);
+      }
+    }
+
     // Draw
     drawOcean(ctx, s.w, s.h, s.tick);
     drawReef(ctx, s.w, s.h, s.reefStageIdx, s.tick);
@@ -527,7 +557,7 @@ export default function Level3Scene({ chymp, onMenu }) {
       drawOrganism(ctx, org, org.x, org.y, ORG_RADIUS_BASE, mutated);
     });
     if (s.shots) drawShots(ctx, s.shots);
-    drawPlayer(ctx, chymp, s.playerX, s.playerY, s.facingRight);
+    drawPlayer(ctx, chymp, s.playerX, s.playerY, s.facingRight, s.pose);
 
     rafRef.current = requestAnimationFrame(loopRef.current);
   }, [chymp]);
@@ -569,6 +599,7 @@ export default function Level3Scene({ chymp, onMenu }) {
     }, null);
     if (nearest) {
       const cs = pickCase(nearest.org.id);
+      triggerPose(s, "net", nearest.org.x, nearest.org.y);
       setCapturedOrg(nearest.org);
       setCapturedOrgMutated(trackerRef.current.isMutated(nearest.org.id));
       setActiveCase(cs || null);
@@ -624,6 +655,7 @@ export default function Level3Scene({ chymp, onMenu }) {
       });
       if (hit) {
         const cs = pickCase(hit.id);
+        triggerPose(s, "net", hit.x, hit.y);
         setCapturedOrg(hit);
         setCapturedOrgMutated(trackerRef.current.isMutated(hit.id));
         setActiveCase(cs || null);
@@ -642,6 +674,7 @@ export default function Level3Scene({ chymp, onMenu }) {
       });
       if (hit && !capturedOrg && !animatingShot) {
         const cs = pickCase(hit.id);
+        triggerPose(s, "net", hit.x, hit.y);
         setCapturedOrg(hit);
         setCapturedOrgMutated(trackerRef.current.isMutated(hit.id));
         setActiveCase(cs || null);
@@ -713,6 +746,7 @@ export default function Level3Scene({ chymp, onMenu }) {
         orgInstanceId: org.id_instance,
         reducedMotion: false,
       });
+      triggerPose(s, "gun", canvasOrg.x, canvasOrg.y);
       // Re-show card after animation (loop fires applyAnimationOutcome which calls setAnimatingShot(false))
     } else {
       // Reduced motion or no position: skip animation, apply immediately

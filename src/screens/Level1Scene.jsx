@@ -444,7 +444,7 @@ export default function Level1Scene({ chymp, onMenu }) {
       const { didMutate } = trackerRef.current.recordMisHandle(org);
       if (didMutate) {
         // TODO: sound — play mutation alarm sound
-        setMutationBanner(`${org.name} has adapted — resistance selected! Switch to Cefepime.`);
+        setMutationBanner(`${org.name} has adapted — resistance selected! Cefepime and a carbapenem are both appropriate.`);
         setTimeout(() => setMutationBanner(null), 5000);
       }
     }

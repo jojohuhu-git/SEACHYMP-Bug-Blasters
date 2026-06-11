@@ -40,7 +40,7 @@ export const WEAPONS = [
     cue: "Use only when truly needed.",
     appropriateFor: ["high", "low"],
     description:
-      "A massive golden anchor launcher — the heaviest weapon in the arsenal. Reserve for confirmed resistance, ESBL/carbapenemase-producing organisms, or when all else fails. Good stewardship means using this sparingly.",
+      "A massive golden anchor launcher — the heaviest weapon in the arsenal. Reserve for mutated AmpC organisms resistant to Cefepime, and for ESBL producers. Good stewardship means using this sparingly.",
   },
 ];
 

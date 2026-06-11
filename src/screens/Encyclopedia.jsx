@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { ORGANISMS, monogramOf } from "../data/organisms.js";
+import { ORGANISMS } from "../data/organisms.js";
+import OrganismImage from "../components/OrganismImage.jsx";
 import { GameState } from "../logic/gameState.js";
 import "./Encyclopedia.css";
 
@@ -47,7 +48,7 @@ export default function Encyclopedia({ onBack }) {
                             color: org.color || "#38b2e8",
                           }}
                         >
-                          {monogramOf(org)}
+                          <OrganismImage org={org} size={40} />
                         </div>
                         <div>
                           <div className="enc-name">{org.name}</div>

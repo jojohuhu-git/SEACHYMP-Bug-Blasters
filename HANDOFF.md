@@ -1,13 +1,43 @@
 # SEACHYMP: Bug Blasters — Session Handoff
 
-_Last updated: 2026-06-04_
+_Last updated: 2026-06-11_
 
 ## Current state
 - Branch: `main`, tracking `origin` (`github.com/jojohuhu-git/SEACHYMP-Bug-Blasters`, public).
 - **Live:** https://jojohuhu-git.github.io/SEACHYMP-Bug-Blasters/ (GitHub Pages,
   auto-deploys on push to `main` via `.github/workflows/deploy.yml`).
-- Build: `npm run build` clean. Lint: 15 pre-existing errors remain (see Deferred).
-- No test suite.
+- Build: `npm run build` clean. Lint: **clean (0 problems)**. No test suite.
+- The illustrated sea-creature art is live on the canvas and all HTML surfaces; Captain
+  has gun/net poses; mutation + kill effects are animated. See CLAUDE.md →
+  "Illustrated creature art" for the full architecture.
+
+## Most recent work (2026-06-11) — creature art, animations, mutated rule, docs
+- **Creature sprites** replace the placeholder circles/monograms everywhere. 22 WebP
+  sprites in `public/art/organisms/`; canvas via `organismSprites.js` + `organismRenderer.js`;
+  HTML via `OrganismImage.jsx` (InfoCard, Encyclopedia, L2/L3 cards).
+- **Procedural animations:** mutation (red glow/tint/shake/embers) and kill explosion
+  (flash/debris/bubbles/ring). Result card now defers until the effect finishes
+  (`pendingRevealRef`) so the explosion is visible.
+- **Captain poses:** `playerRenderer.triggerPose` — gun (muzzle+recoil) on fire, net on
+  capture (L2/L3). L1 keeps its own net flourish.
+- **Mutated drug rule changed → Cefepime and carbapenem are CO-EQUAL** (was "Cefepime
+  preferred, carbapenem reserve"). Carbapenem reserve text fixed: reserve for mutated
+  AmpC resistant to Cefepime + ESBL producers (carbapenemase removed — clinically wrong).
+  L3 `CaseCard` overrides the static answer when mutated.
+- **Roster:** `starfish`→"Coral", `friendly_crab`→"Friendly Clam" (full text), `seahorse`
+  removed and repurposed as a procedural reef decoration (appears growing/thriving).
+- **Docs:** `docs/RULES.md` rewritten as a full review sheet covering rules + per-organism
+  catch blurbs/teaching + shot pop-up feedback + mutation banners, each with ✎ Change lines.
+
+## Previous work (2026-06-04) — RULES.md adjudication
+Applied the clinician adjudications from `docs/RULES.md`. Commit `f834543`.
+
+- **Removed TMP-SMX and Fluoroquinolones entirely.** Arsenal is now
+  Ceftriaxone / Cefepime / Carbapenems (`src/data/weapons.js`).
+- **Carbapenem stewardship rework** (`src/logic/weaponChoice.js`): carbapenem is now
+  a *correct* ("acceptable") choice for **high-risk AmpC and mutated** organisms with
+  reserve-it messaging; stays **reserve/incorrect** for low-risk.
+- **Mutation simplified** (`src/logic/mutation.js`): `INEFFECTIVE_ON_MUTATED =
 
 ## Most recent work (2026-06-04) — RULES.md adjudication
 Applied the clinician adjudications from `docs/RULES.md`. Commit `f834543`.

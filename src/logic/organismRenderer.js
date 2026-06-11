@@ -25,6 +25,50 @@
 
 import { monogramOf } from "../data/organisms.js";
 import { drawOrganismEffects } from "./shotAnimation.js";
+import { drawCreatureSprite, drawKillExplosion, prefersReducedMotion } from "./organismSprites.js";
+
+const _now = () => (typeof performance !== "undefined" ? performance.now() : Date.now()) / 1000;
+
+// Rising red/ember particles around a mutated creature (resistance cue).
+// Deterministic from time + per-instance seed — no per-frame particle state.
+function drawMutationParticles(ctx, x, y, radius, seed) {
+  const t = _now();
+  const N = 6;
+  ctx.save();
+  for (let i = 0; i < N; i++) {
+    const phase = (t * 0.6 + i / N + (seed % 1)) % 1; // 0..1 lifecycle
+    const px = x + Math.sin(t * 3 + i * 1.7 + seed) * radius * 0.5;
+    const py = y + radius * 0.2 - phase * radius * 2.3; // drift upward
+    ctx.globalAlpha = (1 - phase) * 0.7;
+    ctx.fillStyle = i % 2 ? "#ef4444" : "#fb923c";
+    ctx.beginPath();
+    ctx.arc(px, py, 1.3 + (1 - phase) * 2.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ── Shared name + MUTATED labels (used by the sprite path) ────────────────────
+// labelY is the top of the name text. Mirrors the placeholder's label styling.
+function drawCreatureLabels(ctx, org, x, labelY, mutated) {
+  ctx.save();
+  ctx.font = "bold 10px 'Segoe UI', sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = mutated ? "#ef4444" : "#e8f4ff";
+  ctx.globalAlpha = 0.85;
+  ctx.fillText(org.name, x, labelY);
+  ctx.restore();
+  if (mutated) {
+    ctx.save();
+    ctx.font = "bold 9px 'Segoe UI', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "#ef4444";
+    ctx.fillText("MUTATED", x, labelY + 12);
+    ctx.restore();
+  }
+}
 
 // ── Art registry — empty at boot; real art is registered by key here ──────────
 // Keys match organism.artToken values from src/data/organisms.js.
@@ -51,10 +95,13 @@ export function darkenHex(hex, amount) {
  * @param {boolean} mutated
  */
 export function drawOrganism(ctx, org, x, y, radius, mutated) {
-  // When the organism is fading out (kill-shot effect), delegate entirely to the
-  // effect renderer — no body is drawn.
+  // When the organism is fading out (kill-shot effect): if it has a decoded
+  // sprite, play the sprite-based explosion; otherwise fall back to the legacy
+  // circle shrink in drawOrganismEffects. No body/labels are drawn either way.
   if (org.fading) {
-    drawOrganismEffects(ctx, org, x, y, radius);
+    if (!(org.artToken && drawKillExplosion(ctx, org, x, y, radius))) {
+      drawOrganismEffects(ctx, org, x, y, radius);
+    }
     return;
   }
 
@@ -65,6 +112,47 @@ export function drawOrganism(ctx, org, x, y, radius, mutated) {
     // Still layer impact effects on top of custom art
     drawOrganismEffects(ctx, org, x, y, radius);
     return;
+  }
+
+  // ── Illustrated sprite path (default once the WebP is on disk) ────────────────
+  // organismSprites resolves /public/art/organisms/<artToken>.webp. Until the
+  // bitmap decodes, drawCreatureSprite returns false and we fall through to the
+  // colored-circle placeholder below so nothing pops in blank.
+  if (org.artToken) {
+    let opts = {};
+    if (mutated) {
+      const reduce = prefersReducedMotion();
+      // Stable per-instance seed so each mutated creature shakes/emits in its
+      // own phase (persisted on the org object, like fadeProgress/mutateFlash).
+      if (org._mutSeed == null) org._mutSeed = Math.random() * 1000;
+      const seed = org._mutSeed;
+      const t = _now();
+      const pulse = reduce ? 0.5 : 0.5 + 0.5 * Math.sin(t * 4 + seed); // 0..1
+      const dx = reduce ? 0 : Math.sin(t * 9 + seed) * 1.6;            // shake
+      const dy = reduce ? 0 : Math.cos(t * 8 + seed) * 1.2;
+      opts = { dx, dy, tintAlpha: 0.3 + 0.18 * pulse };
+
+      // Pulsing red glow halo behind the (shaken) sprite.
+      ctx.save();
+      const glowR = radius * (1.7 + 0.15 * pulse);
+      const ga = 0.35 + 0.2 * pulse;
+      const g = ctx.createRadialGradient(x + dx, y + dy, radius * 0.3, x + dx, y + dy, glowR);
+      g.addColorStop(0, `rgba(239,68,68,${ga})`);
+      g.addColorStop(1, "rgba(239,68,68,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x + dx, y + dy, glowR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    if (drawCreatureSprite(ctx, org, x, y, radius, mutated, opts)) {
+      if (mutated && !prefersReducedMotion()) {
+        drawMutationParticles(ctx, x, y, radius, org._mutSeed);
+      }
+      drawCreatureLabels(ctx, org, x, y + radius * (mutated ? 1.55 : 1.4), mutated);
+      drawOrganismEffects(ctx, org, x, y, radius);
+      return;
+    }
   }
 
   // ── Placeholder: colored circle + monogram ────────────────────────────────────

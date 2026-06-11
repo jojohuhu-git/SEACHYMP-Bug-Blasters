@@ -36,10 +36,10 @@ const CORAL_PALETTES = [
 
 // Per-stage tuning. Index 0 barren … 3 thriving.
 const STAGE = [
-  { reveal: 0.0,  sizeMax: 0.0, fishes: 0,  shells: 0, starfish: 0, crabs: 0, anemones: 0, kelp: 0, mega: false },
-  { reveal: 0.4,  sizeMax: 1.1, fishes: 2,  shells: 2, starfish: 0, crabs: 0, anemones: 1, kelp: 1, mega: false },
-  { reveal: 0.72, sizeMax: 1.4, fishes: 6,  shells: 3, starfish: 1, crabs: 1, anemones: 3, kelp: 3, mega: false },
-  { reveal: 1.0,  sizeMax: 1.8, fishes: 12, shells: 5, starfish: 2, crabs: 2, anemones: 5, kelp: 5, mega: true },
+  { reveal: 0.0,  sizeMax: 0.0, fishes: 0,  shells: 0, starfish: 0, crabs: 0, anemones: 0, kelp: 0, mega: false, seahorses: 0 },
+  { reveal: 0.4,  sizeMax: 1.1, fishes: 2,  shells: 2, starfish: 0, crabs: 0, anemones: 1, kelp: 1, mega: false, seahorses: 0 },
+  { reveal: 0.72, sizeMax: 1.4, fishes: 6,  shells: 3, starfish: 1, crabs: 1, anemones: 3, kelp: 3, mega: false, seahorses: 1 },
+  { reveal: 1.0,  sizeMax: 1.8, fishes: 12, shells: 5, starfish: 2, crabs: 2, anemones: 5, kelp: 5, mega: true, seahorses: 3 },
 ];
 
 const FISH_COLORS = ["#fbbf24", "#fb7185", "#60a5fa", "#34d399", "#f472b6", "#fdba74"];
@@ -388,6 +388,68 @@ function drawBubbleColumn(ctx, x, h, baseY, tick, seed) {
   }
 }
 
+// Friendly seahorse hovering over a growing/thriving reef (decorative, not clickable).
+function drawSeahorse(ctx, cx, cy, sz, seed, tick) {
+  const sway = Math.sin(tick * 0.03 + seed) * 0.1;
+  const bob = Math.sin(tick * 0.045 + seed) * sz * 0.18;
+  ctx.save();
+  ctx.translate(cx, cy + bob);
+  ctx.rotate(sway);
+
+  // Body (head up, snout right, curled tail bottom-left)
+  ctx.fillStyle = "#f6b84b";
+  ctx.beginPath();
+  ctx.moveTo(-0.15 * sz, -1.15 * sz);
+  ctx.quadraticCurveTo(0.45 * sz, -1.3 * sz, 0.5 * sz, -0.95 * sz);
+  ctx.quadraticCurveTo(0.55 * sz, -0.85 * sz, 0.95 * sz, -0.7 * sz);
+  ctx.quadraticCurveTo(0.6 * sz, -0.6 * sz, 0.4 * sz, -0.45 * sz);
+  ctx.quadraticCurveTo(0.8 * sz, 0.0, 0.45 * sz, 0.5 * sz);
+  ctx.quadraticCurveTo(0.2 * sz, 0.95 * sz, -0.4 * sz, 0.8 * sz);
+  ctx.quadraticCurveTo(0.05 * sz, 0.7 * sz, 0.1 * sz, 0.35 * sz);
+  ctx.quadraticCurveTo(-0.5 * sz, 0.0, -0.2 * sz, -0.6 * sz);
+  ctx.quadraticCurveTo(-0.35 * sz, -0.95 * sz, -0.15 * sz, -1.15 * sz);
+  ctx.closePath();
+  ctx.fill();
+
+  // Dorsal fin
+  ctx.fillStyle = "rgba(224,154,46,0.8)";
+  ctx.beginPath();
+  ctx.moveTo(-0.22 * sz, -0.5 * sz);
+  ctx.quadraticCurveTo(-0.6 * sz, -0.25 * sz, -0.28 * sz, 0.05 * sz);
+  ctx.quadraticCurveTo(-0.18 * sz, -0.2 * sz, -0.22 * sz, -0.5 * sz);
+  ctx.closePath();
+  ctx.fill();
+
+  // Snout line
+  ctx.strokeStyle = "#e09a2e";
+  ctx.lineWidth = Math.max(1, sz * 0.08);
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(0.5 * sz, -0.78 * sz);
+  ctx.lineTo(0.9 * sz, -0.72 * sz);
+  ctx.stroke();
+
+  // Coronet bumps on the crown
+  ctx.fillStyle = "#e09a2e";
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath();
+    ctx.arc((-0.05 + i * 0.12) * sz, (-1.2 - (i === 1 ? 0.08 : 0)) * sz, sz * 0.07, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Eye
+  ctx.fillStyle = "#1f2937";
+  ctx.beginPath();
+  ctx.arc(0.22 * sz, -0.86 * sz, sz * 0.1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.arc(0.25 * sz, -0.89 * sz, sz * 0.035, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
 // ── Main painter ──────────────────────────────────────────────────────────────
 
 export function drawReef(ctx, w, h, stageIdx, tick) {
@@ -464,6 +526,13 @@ export function drawReef(ctx, w, h, stageIdx, tick) {
   for (let a = 0; a < cfg.anemones; a++) {
     const ax = ((a + 0.3) / cfg.anemones) * w + (rand(a * 4.4) - 0.5) * 50;
     drawAnemone(ctx, ax, baseY + 6, 8 + rand(a * 2) * 5, a * 6.6, tick);
+  }
+
+  // Seahorses hover over the reef once it is growing/thriving (decorative).
+  for (let sh = 0; sh < (cfg.seahorses || 0); sh++) {
+    const shx = ((sh + 0.5) / Math.max(1, cfg.seahorses)) * w + (rand(sh * 12.7) - 0.5) * 110;
+    const shy = baseY - bandH * 0.55 - rand(sh * 4.2) * 36;
+    drawSeahorse(ctx, shx, shy, 12 + rand(sh * 2) * 5, sh * 5.3 + 1, tick);
   }
 
   // Small static life on the sand.

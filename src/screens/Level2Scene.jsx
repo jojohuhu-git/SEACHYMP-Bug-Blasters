@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { ORGANISMS, monogramOf } from "../data/organisms.js";
+import { ORGANISMS } from "../data/organisms.js";
+import OrganismImage from "../components/OrganismImage.jsx";
 import { WEAPONS } from "../data/weapons.js";
 import { GameState } from "../logic/gameState.js";
 import { MutationTracker } from "../logic/mutation.js";
@@ -14,7 +15,7 @@ import {
   applyPulseEffect,
 } from "../logic/shotAnimation.js";
 import { drawOrganism } from "../logic/organismRenderer.js";
-import { drawPlayer } from "../logic/playerRenderer.js";
+import { drawPlayer, triggerPose } from "../logic/playerRenderer.js";
 import { drawReef } from "../logic/reefRenderer.js";
 import HUD from "../components/HUD.jsx";
 import "./Level2Scene.css";
@@ -116,7 +117,6 @@ function WeaponChoiceCard({ org, mutated, onWeaponChoice, onClose }) {
     ? org.blurb.split(/\.\s+/)[0].replace(/\.$/, "") + "."
     : "";
   const artBg = (org.color || "#38b2e8") + "22";
-  const monogram = monogramOf(org);
 
   function handleWeapon(weaponId) {
     const r = classifyChoice(org, weaponId, mutated);
@@ -160,9 +160,7 @@ function WeaponChoiceCard({ org, mutated, onWeaponChoice, onClose }) {
             className="l2-art"
             style={{ background: artBg, border: `2px solid ${org.color || "#38b2e8"}` }}
           >
-            <span className="l2-art-mono" style={{ color: org.color || "#38b2e8" }}>
-              {monogram}
-            </span>
+            <OrganismImage org={org} size={56} />
             {mutated && <span className="l2-mutated-tag">MUTATED</span>}
           </div>
           <div className="l2-title-block">
@@ -177,7 +175,7 @@ function WeaponChoiceCard({ org, mutated, onWeaponChoice, onClose }) {
           <p className="l2-blurb">{blurbFirst}</p>
           {mutated && (
             <div className="l2-mutation-warn">
-              <strong>Mutated form.</strong> Ceftriaxone is no longer effective. Prefer Cefepime or a carbapenem.
+              <strong>Mutated form.</strong> Ceftriaxone is no longer effective — Cefepime and a carbapenem are both appropriate.
             </div>
           )}
         </div>
@@ -292,6 +290,9 @@ export default function Level2Scene({ chymp, onMenu }) {
   const animatingShotRef = useRef(false); // ref mirror so loop closure stays stable
   // pendingWeaponResult: holds {org, weaponId, result} for after animation completes
   const pendingWeaponResultRef = useRef(null);
+  // pendingReveal: holds {outcome, orgInstanceId} while a kill/mutate/pulse effect
+  // plays on the canvas — the result card stays hidden until the effect finishes.
+  const pendingRevealRef = useRef(null);
   const [mutationBanner, setMutationBanner] = useState(null);
   const [identified, setIdentified] = useState(
     () => GameState.getProgress().identifiedCount
@@ -340,9 +341,15 @@ export default function Level2Scene({ chymp, onMenu }) {
     } else if (shot.outcome === "pulse" && org) {
       org.pulseProgress = 0;
     }
-    // Re-show the weapon choice card with its result
-    animatingShotRef.current = false;
-    setAnimatingShot(false);
+    // Keep the card hidden until the canvas effect (explosion / mutate flash /
+    // pulse) finishes playing — the loop reveals the result once it's done. If
+    // the organism is already gone, reveal immediately.
+    if (org) {
+      pendingRevealRef.current = { outcome: shot.outcome, orgInstanceId: shot.orgInstanceId };
+    } else {
+      animatingShotRef.current = false;
+      setAnimatingShot(false);
+    }
   }
 
   const loop = useCallback(() => {
@@ -409,6 +416,21 @@ export default function Level2Scene({ chymp, onMenu }) {
       s.shots = s.shots.filter((sh) => !sh.done);
     }
 
+    // Reveal the weapon-result card once the kill/mutate/pulse effect finishes.
+    if (pendingRevealRef.current) {
+      const pr = pendingRevealRef.current;
+      const o = s.organisms.find((x) => x.id_instance === pr.orgInstanceId);
+      const done =
+        pr.outcome === "kill" ? !o :
+        pr.outcome === "mutate" ? (!o || o.mutateFlash == null) :
+        (!o || o.pulseProgress == null);
+      if (done) {
+        pendingRevealRef.current = null;
+        animatingShotRef.current = false;
+        setAnimatingShot(false);
+      }
+    }
+
     drawOcean(ctx, s.w, s.h, s.tick);
     drawReef(ctx, s.w, s.h, s.reefStageIdx, s.tick);
     s.organisms.forEach((org) => {
@@ -416,7 +438,7 @@ export default function Level2Scene({ chymp, onMenu }) {
       drawOrganism(ctx, org, org.x, org.y, ORG_RADIUS_BASE, mutated);
     });
     if (s.shots) drawShots(ctx, s.shots);
-    drawPlayer(ctx, chymp, s.playerX, s.playerY, s.facingRight);
+    drawPlayer(ctx, chymp, s.playerX, s.playerY, s.facingRight, s.pose);
 
     rafRef.current = requestAnimationFrame(loopRef.current);
   }, [chymp]);
@@ -457,6 +479,7 @@ export default function Level2Scene({ chymp, onMenu }) {
       return best;
     }, null);
     if (nearest) {
+      triggerPose(s, "net", nearest.org.x, nearest.org.y);
       setCapturedOrg(nearest.org);
       setCapturedOrgMutated(trackerRef.current.isMutated(nearest.org.id));
     }
@@ -510,6 +533,7 @@ export default function Level2Scene({ chymp, onMenu }) {
         return Math.sqrt(dx * dx + dy * dy) <= ORG_RADIUS_BASE + 14;
       });
       if (hit) {
+        triggerPose(s, "net", hit.x, hit.y);
         setCapturedOrg(hit);
         setCapturedOrgMutated(trackerRef.current.isMutated(hit.id));
       }
@@ -526,6 +550,7 @@ export default function Level2Scene({ chymp, onMenu }) {
         return Math.sqrt(dx * dx + dy * dy) <= ORG_RADIUS_BASE + 20;
       });
       if (hit && !capturedOrg) {
+        triggerPose(s, "net", hit.x, hit.y);
         setCapturedOrg(hit);
         setCapturedOrgMutated(trackerRef.current.isMutated(hit.id));
         return;
@@ -595,6 +620,7 @@ export default function Level2Scene({ chymp, onMenu }) {
         orgInstanceId: org.id_instance,
         reducedMotion: false,
       });
+      triggerPose(s, "gun", canvasOrg.x, canvasOrg.y);
     } else {
       // Reduced motion or no canvas position — apply immediately without animation
       if (s && canvasOrg) {

@@ -1,14 +1,38 @@
-# SEACHYMP: Bug Blasters — Drug/Bug Adjudication Sheet
+# SEACHYMP: Bug Blasters — Rules & Comments Review Sheet
 
-> **How to use this file:** This is the code-accurate rule set the game currently enforces
-> (pulled from `src/logic/weaponChoice.js`, `src/data/cases.js`, `src/logic/mutation.js`,
-> and the risk tiers in `src/data/organisms.js`).
+> **How to use this file.** This is the code-accurate rule set **and** the editable text
+> the game shows the player — pulled live from `src/logic/weaponChoice.js`,
+> `src/data/cases.js`, `src/logic/mutation.js`, `src/data/organisms.js`, and the scene
+> banners. It now covers three things you can review and change:
 >
-> For each rule, fill in the **Approved?** column (`Y` / `N`) and, if changing,
-> write the desired behavior in **Change to / Notes**. Hand the file back and I'll
-> apply every adjudication in one pass, then re-verify the build.
+> 1. **The rules** — what counts correct in Levels 1–3 and how mutation works.
+> 2. **Per-organism comments** — the blurb shown when a bug is **caught**, plus its teaching point.
+> 3. **Pop-up feedback** — the message shown when a bug is **shot** with an antibiotic.
+>
+> To request a change: write the desired text/behavior on the **✎ Change:** line (or in the
+> **Change to / Notes** column). Hand the file back and I'll apply every edit in one pass
+> across all code surfaces, then rebuild, re-verify, and redeploy.
 
-Last generated: 2026-06-03 · Cases: 16 · Source of truth: `src/data/`
+Last generated: **2026-06-11** · Organisms: **22** · Level 3 cases: **16** · Source of truth: `src/`
+
+---
+
+## Source-of-truth map (where each editable string lives)
+
+| What | File |
+|---|---|
+| Organism risk tiers, **catch blurbs**, teaching points | `src/data/organisms.js` |
+| **Shot feedback** — Level 2 (headings + sentences) | `src/logic/weaponChoice.js` (`classifyChoice`) |
+| **Shot feedback** — Level 3 (case-driven) | `src/screens/Level3Scene.jsx` (`CaseCard`) + `src/data/cases.js` rationales |
+| Mutation banners | `Level2Scene.jsx`, `Level3Scene.jsx`, `InfoCard.jsx`, `Level1Scene.jsx`, `HowToPlay.jsx` |
+| Mutation rule (threshold, ineffective drug) | `src/logic/mutation.js` |
+| Weapon names/descriptions | `src/data/weapons.js` |
+
+> ⚠ **Note on blurbs:** several catch blurbs still describe the *previous* placeholder
+> creature, not the new sea-creature art (e.g. Hafnia reads "purple blobfish" but the art is
+> a **cowfish**; Providencia reads "sea cucumber" but the art is a **sea urchin**; the
+> gram-positives read "anemone/coral/shells"). Rewrite any you want to match the art in the
+> per-organism section below.
 
 ---
 
@@ -16,9 +40,11 @@ Last generated: 2026-06-03 · Cases: 16 · Source of truth: `src/data/`
 
 | Tier | Organisms | Approved? | Change to / Notes |
 |---|---|---|---|
-| **High-risk AmpC** | Enterobacter cloacae, Citrobacter freundii, Klebsiella aerogenes | | |
+| **High-risk AmpC** | Enterobacter cloacae, Citrobacter freundii, Klebsiella aerogenes (bonus) | | |
 | **Low-risk AmpC** | Serratia marcescens, Aeromonas hydrophila, Hafnia alvei, Yersinia enterocolitica, Morganella morganii, Providencia stuartii | | |
-| **Non-AmpC distractors** | E. coli, K. pneumoniae, K. oxytoca, C. koseri, P. mirabilis, P. penneri, E. faecalis, S. aureus, S. pneumoniae, E. faecium, + 4 reef critters | | |
+| **Non-AmpC distractors** | E. coli, K. pneumoniae, K. oxytoca, C. koseri, P. mirabilis, P. penneri, E. faecalis, S. aureus, S. pneumoniae, E. faecium, Reef Clownfish, Coral, Friendly Clam | | |
+
+Arsenal (3 weapons): **Ceftriaxone**, **Cefepime**, **Carbapenems**.
 
 ---
 
@@ -26,90 +52,82 @@ Last generated: 2026-06-03 · Cases: 16 · Source of truth: `src/data/`
 
 | # | Rule | Correct? | Approved? | Change to / Notes |
 |---|---|---|---|---|
-| L1-1 | "Identify" a SEACHYMP organism (any high/low AmpC, incl. K. aerogenes bonus) | ✅ correct | Y| |
-| L1-2 | "Ignore" a non-AmpC distractor | ✅ correct | Y| |
-| L1-3 | "Identify" a distractor, or "ignore" a SEACHYMP organism | ❌ incorrect | Y| |
+| L1-1 | "Identify" a SEACHYMP organism (any high/low AmpC, incl. K. aerogenes bonus) | ✅ correct | | |
+| L1-2 | "Ignore" a non-AmpC distractor | ✅ correct | | |
+| L1-3 | "Identify" a distractor, or "ignore" a SEACHYMP organism | ❌ incorrect | | |
 
-Notes: risk tier is hidden until after the decision.
+Risk tier is hidden until after the decision.
 
 ---
 
 ## LEVEL 2 — Weapon Match (`classifyChoice`)
 
-Fixed matrix of organism tier × weapon. ✅ = counts correct (advances reef), ❌ = incorrect.
+Fixed matrix of organism state × weapon. ✅ = counts correct (advances reef), ❌ = incorrect.
 
-| # | Organism tier | Weapon | Engine result | Correct? | Approved? | Change to / Notes |
+| # | Organism state | Weapon | Engine result | Correct? | Approved? | Change to / Notes |
 |---|---|---|---|---|---|---|
-| L2-1 | High-risk AmpC | Cefepime | preferred | ✅ | Y| |
-| L2-2 | High-risk AmpC | Ceftriaxone | wrong (de-repression risk) | ❌ | Y| |
-| L2-3 | High-risk AmpC | TMP-SMX | wrong (not first-line) | ❌ | N| remove option|
-| L2-4 | High-risk AmpC | Fluoroquinolone | wrong (not first-line) | ❌ | N| remove option|
-| L2-5 | High-risk AmpC | Carbapenem | reserve | ❌ | N| change to acceptable but comment should be made to reserve carbapenems when possible|
-| L2-6 | High-risk AmpC | Release | wrong (needed treatment) | ❌ | Y| |
-| L2-7 | Low-risk AmpC | Ceftriaxone | preferred (narrow) | ✅ | Y| |
-| L2-8 | Low-risk AmpC | Cefepime | acceptable (broader than needed) | ✅ | Y| |
-| L2-9 | Low-risk AmpC | TMP-SMX | acceptable | ✅ | N| remove option|
-| L2-10 | Low-risk AmpC | Fluoroquinolone | acceptable | ✅ | N| remove option|
-| L2-11 | Low-risk AmpC | Carbapenem | reserve | ❌ | Y| |
-| L2-12 | Low-risk AmpC | Release | wrong (needed treatment) | ❌ | Y| |
-| L2-13 | Non-AmpC distractor | Release | release-correct | ✅ | Y| |
-| L2-14 | Non-AmpC distractor | Any antibiotic | overtreatment | ❌ | Y| |
-| L2-15 | Mutated form | Ceftriaxone / TMP-SMX / FQ | ineffective | ❌ | N| remove TMP-SMX and FQ option|
-| L2-16 | Mutated form | Cefepime | preferred | ✅ | Y| |
-| L2-17 | Mutated form | Carbapenem | reserve | ❌ (see FLAG-1) | N| change to acceptable|
+| L2-1 | High-risk AmpC | Cefepime | preferred | ✅ | | |
+| L2-2 | High-risk AmpC | Ceftriaxone | wrong (de-repression risk) | ❌ | | |
+| L2-3 | High-risk AmpC | Carbapenem | acceptable — reserve it | ✅ | | |
+| L2-4 | High-risk AmpC | Release | wrong (needed treatment) | ❌ | | |
+| L2-5 | Low-risk AmpC | Ceftriaxone | preferred (narrow) | ✅ | | |
+| L2-6 | Low-risk AmpC | Cefepime | acceptable (broader than needed) | ✅ | | |
+| L2-7 | Low-risk AmpC | Carbapenem | reserve (incorrect) | ❌ | | |
+| L2-8 | Low-risk AmpC | Release | wrong (needed treatment) | ❌ | | |
+| L2-9 | Non-AmpC distractor | Release | release-correct | ✅ | | |
+| L2-10 | Non-AmpC distractor | Any antibiotic | overtreatment | ❌ | | |
+| L2-11 | **Mutated** form | Ceftriaxone | ineffective | ❌ | | |
+| L2-12 | **Mutated** form | Cefepime | correct (co-equal w/ carbapenem) | ✅ | | |
+| L2-13 | **Mutated** form | Carbapenem | correct (co-equal w/ Cefepime) | ✅ | | |
+
+**Mutated rule (current):** once an organism de-represses, Ceftriaxone is ineffective and
+**Cefepime and a carbapenem are co-equal** correct choices (neither is "preferred" over the other).
 
 ---
 
 ## LEVEL 3 — Stewardship Challenge (case-driven)
 
-Correctness = **exact match to `correctDecision`** (only the one listed drug counts correct;
-all others are incorrect). Non-AmpC distractors that drift in → Release is correct.
+Correctness = **exact match to `correctDecision`** (only the listed drug counts correct);
+non-AmpC distractors → Release is correct. **If an organism is mutated, Cefepime OR a carbapenem
+are both accepted** (override of the case answer; Ceftriaxone ineffective).
 
-| # | Organism | Infection | Source control | Duration | Correct drug | Approved? | Change to / Add acceptable alts |
+| # | Organism | Infection | Source control | Duration | Correct drug | Approved? | Change to / Notes |
 |---|---|---|---|---|---|---|---|
-| L3-1 | Serratia | Pyelonephritis | Achieved | 7 d | Ceftriaxone |N |change to 5 d |
-| L3-2 | Serratia | Native-valve endocarditis | N/A | 6 wk | Cefepime |Y | |
-| L3-3 | Serratia | Catheter-related BSI | Catheter removed | 14 d | Ceftriaxone |N |change to 5 d |
-| L3-4 | Enterobacter | Bacteremia | Line removed | 14 d | Cefepime |N |change to 7 d |
-| L3-5 | Enterobacter | Hospital-acquired pneumonia | N/A | 8 d | Cefepime |N |change to 5-7 d |
-| L3-6 | Enterobacter | Catheter-assoc UTI | Catheter removed | 5 d | Cefepime |Y | |
-| L3-7 | Citrobacter | Uncomplicated UTI | N/A | 5 d | Cefepime |N |change to 3-5 d |
-| L3-8 | Citrobacter | Post-neurosurgical meningitis | Drain repositioned | 21 d | Cefepime |N |remove example |
-| L3-9 | Aeromonas | Soft-tissue (freshwater) | Debridement | 7 d | Fluoroquinolone |N |Change to ceftriaxone or cefepime for 5-7 d |
-| L3-10 | Aeromonas | Severe gastroenteritis (immunocomp) | N/A | 5 d | Fluoroquinolone |N |remove example |
-| L3-11 | Hafnia | Uncomplicated UTI | N/A | 5 d | Ceftriaxone |N |change to 3-5 d |
-| L3-12 | Hafnia | Bacteremia (bowel, drained) | Drainage | 14 d | Ceftriaxone |N |change bowel to intraabdominal abscess, 4 d |
-| L3-13 | Morganella | Surgical wound | Debridement | 10 d | Ceftriaxone |N |change to 5-7 d |
-| L3-14 | Morganella | Complicated UTI (stent) | Stent placed | 14 d | Ceftriaxone |N |change to 7 d |
-| L3-15 | Providencia | Catheter-assoc UTI | Catheter changed | 7 d | Ceftriaxone |N |change to 5-7 d |
-| L3-16 | Providencia | Bacteremia (urinary) | Catheter removed | 14 d | Ceftriaxone |N |change to 7 d |
-| L3-17 | Yersinia | Invasive enteritis (immunocomp) | N/A | 5 d | Fluoroquinolone |N |remove example |
-| L3-18 | Yersinia | Bacteremia (blood product) | N/A | 14 d | Fluoroquinolone |N |remove example |
-| L3-19 | K. aerogenes | Bacteremia (biliary) | ERCP drainage | 14 d | Cefepime |N |change to 7 d |
-| L3-20 | K. aerogenes | Ventilator-assoc pneumonia | N/A | 8 d | Cefepime |N |change to 7 d |
+| L3-1 | Serratia | Pyelonephritis | Achieved (no obstruction) | 5 days | Ceftriaxone | | |
+| L3-2 | Serratia | Native-valve endocarditis | N/A | 6 weeks | Cefepime | | |
+| L3-3 | Serratia | Catheter-related BSI | Catheter removed | 7 days | Ceftriaxone | | |
+| L3-4 | Enterobacter | Bacteremia | Line removed | 7 days | Cefepime | | |
+| L3-5 | Enterobacter | Hospital-acquired pneumonia | N/A | 5–7 days | Cefepime | | |
+| L3-6 | Enterobacter | Catheter-associated UTI | Catheter removed | 5 days | Cefepime | | |
+| L3-7 | Citrobacter | Uncomplicated UTI | N/A | 3–5 days | Cefepime | | |
+| L3-8 | Aeromonas | Soft-tissue (freshwater) | Debridement done | 5–7 days | Ceftriaxone | | |
+| L3-9 | Hafnia | Uncomplicated UTI | N/A | 3–5 days | Ceftriaxone | | |
+| L3-10 | Hafnia | Intra-abdominal abscess | Abscess drained | 4 days | Ceftriaxone | | |
+| L3-11 | Morganella | Surgical wound | Debridement performed | 5–7 days | Ceftriaxone | | |
+| L3-12 | Morganella | Complicated UTI (stent) | Stent placed | 7 days | Ceftriaxone | | |
+| L3-13 | Providencia | Catheter-associated UTI | Catheter changed | 5–7 days | Ceftriaxone | | |
+| L3-14 | Providencia | Bacteremia (urinary) | Catheter removed | 7 days | Ceftriaxone | | |
+| L3-15 | K. aerogenes | Bacteremia (biliary, ERCP) | Biliary drainage | 7 days | Cefepime | | |
+| L3-16 | K. aerogenes | Ventilator-assoc pneumonia | N/A | 7 days | Cefepime | | |
 
-### Per-case rationale (for reference while adjudicating)
+### Per-case rationale (the "correct choice" pop-up text — edit on the ✎ line)
 
-- **L3-1** Serratia low-risk; non-obstructed pyelonephritis, short course → Ceftriaxone acceptable.
-- **L3-2** 6-week endocarditis course → sustained cephalosporin pressure risks de-repression → Cefepime.
-- **L3-3** Bacteremia + catheter removed, no endovascular complication → Ceftriaxone reasonable.
-- **L3-4** Enterobacter high-risk; documented Ceftriaxone failures in bacteremia → Cefepime regardless of source control.
-- **L3-5** High-risk + high-burden pulmonary infection → Cefepime.
-- **L3-6** Short UTI course but high-risk profile → Cefepime to avoid selecting resistance.
-- **L3-7** Citrobacter freundii high-risk → Cefepime even for shorter courses (FQ/TMP-SMX alternatives if susceptible).
-- **L3-8** High-risk meningitis, prolonged CNS course → Cefepime (or carbapenem).
-- **L3-9** Aeromonas freshwater wound; intrinsic ampicillin resistance → FQ or TMP-SMX preferred over beta-lactams.
-- **L3-10** Aeromonas gastroenteritis in immunocompromised host → FQ first-line when treatment indicated.
-- **L3-11** Hafnia low-risk; straightforward UTI → Ceftriaxone.
-- **L3-12** Low-risk bacteremia with source control → 14-day Ceftriaxone reasonable.
-- **L3-13** Morganella low induction risk + debridement → Ceftriaxone.
-- **L3-14** Low-risk UTI with source control → Ceftriaxone covers prolonged course.
-- **L3-15** Providencia low-risk; catheter-assoc UTI after exchange → Ceftriaxone.
-- **L3-16** Low-risk urinary-source bacteremia with source control → Ceftriaxone.
-- **L3-17** Yersinia invasive infection in immunocompromised host → FQ or TMP-SMX preferred.
-- **L3-18** Yersinia bacteremia from blood products; guideline-preferred FQ + aminoglycoside or 3rd-gen ceph — FQ monotherapy reasonable for step-down.
-- **L3-19** K. aerogenes shares Enterobacter high-risk profile → Cefepime even after source control.
-- **L3-20** High-risk VAP → Cefepime; empiric Ceftriaxone risks failure via de-repression.
+- **L3-1** "Serratia is low-risk AmpC; for non-obstructed pyelonephritis a 5-day course of Ceftriaxone is clinically appropriate — the low induction risk supports a narrow, short regimen." ✎ Change:
+- **L3-2** "Even for low-risk AmpC organisms, a 6-week endocarditis course raises the risk of de-repression under sustained cephalosporin pressure — Cefepime is safer for prolonged therapy." ✎ Change:
+- **L3-3** "Serratia bacteremia with catheter removal and no endovascular complication — low-risk AmpC with source control supports a 7-day Ceftriaxone course." ✎ Change:
+- **L3-4** "Enterobacter is HIGH-risk AmpC; clinical failures with Ceftriaxone in Enterobacter bacteremia are well-documented — Cefepime is strongly preferred regardless of source control." ✎ Change:
+- **L3-5** "High-risk AmpC + pulmonary infection with high bacterial burden — Cefepime is indicated; de-repression under third-generation cephalosporins is a real risk here." ✎ Change:
+- **L3-6** "Even for a short UTI course, Enterobacter's high-risk AmpC profile warrants Cefepime over Ceftriaxone to avoid selecting for resistance." ✎ Change:
+- **L3-7** "Citrobacter freundii is HIGH-risk AmpC — Cefepime is the safer choice even for shorter courses to avoid selecting for AmpC de-repression." ✎ Change:
+- **L3-8** "Aeromonas is low-risk AmpC; for a soft-tissue infection with adequate debridement, Ceftriaxone is appropriate — escalate to Cefepime only for serious high-inoculum infections." ✎ Change:
+- **L3-9** "Hafnia is low-risk AmpC; Ceftriaxone is appropriate for a straightforward UTI — the organism alone does not demand escalation." ✎ Change:
+- **L3-10** "Low-risk AmpC intra-abdominal abscess with source control achieved (drained) — with adequate drainage, a focused 4-day Ceftriaxone course is appropriate; source control is the key driver here." ✎ Change:
+- **L3-11** "Morganella morganii is low induction risk; with adequate debridement, a 5–7-day Ceftriaxone course is clinically appropriate." ✎ Change:
+- **L3-12** "Low-risk AmpC UTI with source control achieved — a 7-day Ceftriaxone course is adequate; re-evaluate if clinical deterioration occurs." ✎ Change:
+- **L3-13** "Providencia is low-risk AmpC; a 5–7-day Ceftriaxone course following catheter exchange is appropriate for uncomplicated catheter-associated UTI." ✎ Change:
+- **L3-14** "Low-risk AmpC bacteremia with source control — a 7-day Ceftriaxone course is appropriate for urinary-source bacteremia; no indication for routine Cefepime escalation." ✎ Change:
+- **L3-15** "Klebsiella aerogenes shares the high-risk AmpC profile of Enterobacter — Cefepime is preferred for bacteremia even after source control." ✎ Change:
+- **L3-16** "High-risk AmpC VAP — Cefepime is strongly preferred; empiric Ceftriaxone in this setting risks clinical failure due to de-repression." ✎ Change:
 
 ---
 
@@ -117,39 +135,162 @@ all others are incorrect). Non-AmpC distractors that drift in → Release is cor
 
 | # | Rule | Current behavior | Approved? | Change to / Notes |
 |---|---|---|---|---|
-| MUT-1 | Trigger | 3 inappropriate Ceftriaxone calls on the SAME high-risk organism type (wrong + Ceftriaxone + riskTier "high") | Y| |
-| MUT-2 | Threshold value | 3 (`MUTATION_THRESHOLD`) |Y | |
-| MUT-3 | Effect | Type flips to AmpC Mutation Form; Ceftriaxone, TMP-SMX, Fluoroquinolone become ineffective; must use Cefepime or Carbapenem |N |remove TMP-SMX and fluoroquinolone |
-| MUT-4 | Scope | Only high-risk AmpC types can mutate; low-risk and distractors never mutate |Y | |
+| MUT-1 | Trigger | 3 inappropriate Ceftriaxone calls on the SAME high-risk organism type | | |
+| MUT-2 | Threshold | 3 (`MUTATION_THRESHOLD`) | | |
+| MUT-3 | Effect | Type flips to mutated form; **Ceftriaxone becomes ineffective**; Cefepime and a carbapenem are co-equal correct | | |
+| MUT-4 | Scope | Only high-risk AmpC types mutate; low-risk and distractors never mutate | | |
 
 ---
 
-## Flagged design inconsistencies (please decide)
+## Pop-up feedback — LEVEL 2 (when a bug is SHOT)
 
-| Flag | Issue | Options | Decision |
-|---|---|---|---|
-| FLAG-1 | Carbapenem on a **mutated** organism is marked incorrect (L2-17), but the mutation feedback says "switch to Cefepime **or a carbapenem**." | (a) make carbapenem correct once mutated · (b) leave as-is | b|
-| FLAG-2 | Level 3 accepts only ONE correct drug per case, yet several rationales name alternatives (L3-9, L3-10, L3-17 mention "FQ **or TMP-SMX**"). | (a) let each case accept a SET of acceptable drugs · (b) keep single answer |b |
-| FLAG-3 | Low-risk AmpC + TMP-SMX/FQ: Level 2 counts these correct (L2-9/L2-10), but Level 3 only counts the single case answer — engines disagree. | (a) reconcile (define acceptable sets shared by both) · (b) accept the divergence | Moot — TMP-SMX/FQ removed entirely. |
-| FLAG-4 | Carbapenem is never "correct" in Level 2 for any organism (pure reserve). | (a) confirm intended · (b) allow correct in some scenario |b |
+Each row is the exact heading + sentence shown after the shot. `{name}` = organism name.
+Edit on the **✎ Change:** line.
+
+- **Distractor + Release** → "Good call." / "This organism is not an AmpC producer — releasing it is the right stewardship move. Treat only what needs treating." ✎ Change:
+- **Distractor + any antibiotic** → "Unnecessary treatment." / "This reef organism did not need antibiotics. Good stewardship means not treating what you do not have to. {name} is not an AmpC producer." ✎ Change:
+- **SEACHYMP + Release** → "This one needed treatment." / "{name} is an AmpC-producing organism that required an antibiotic. Releasing it was not the right call here." ✎ Change:
+- **Mutated + Ceftriaxone** → "Ineffective against mutated form." / "This organism has adapted — ceftriaxone is no longer effective. Switch to Cefepime or a carbapenem." ✎ Change:
+- **Mutated + Cefepime _or_ Carbapenem** → "Correct — effective against the mutated form." / "{name} has de-repressed its AmpC. Cefepime and a carbapenem are both appropriate now — Ceftriaxone is no longer effective." ✎ Change:
+- **High-risk + Cefepime** → "Correct — preferred choice." / "{name} is a high-risk AmpC producer. Cefepime is the preferred agent — it is stable against AmpC de-repression." ✎ Change:
+- **High-risk + Ceftriaxone** → "Risk of clinical failure." / "{name} is a high-risk AmpC producer. Ceftriaxone risks AmpC de-repression and clinical failure in serious infections. Prefer Cefepime." ✎ Change:
+- **High-risk + Carbapenem** → "Acceptable — but reserve it." / "Carbapenems work against high-risk AmpC organisms, but Cefepime is preferred first-line for {name}. Reserve carbapenems for mutated AmpC organisms that are resistant to Cefepime, and for ESBL producers." ✎ Change:
+- **Low-risk + Ceftriaxone** → "Correct — good stewardship." / "{name} is low-risk AmpC. Ceftriaxone is an appropriate, narrow choice for most serious infections with this organism." ✎ Change:
+- **Low-risk + Cefepime** → "Effective, but broader than needed." / "{name} is low-risk AmpC. Cefepime works, but Ceftriaxone is often sufficient here. Good stewardship means narrowing when you can." ✎ Change:
+- **Low-risk + Carbapenem** → "Works, but reserve it." / "Carbapenems are effective here, but they should be reserved for mutated AmpC organisms resistant to Cefepime and for ESBL producers. Ceftriaxone or Cefepime is preferred for this low-risk organism." ✎ Change:
 
 ---
 
-## Global adjudication notes (free text)
+## Pop-up feedback — LEVEL 3 (when a bug is SHOT in a case)
 
-> Add any cross-cutting changes, new cases to add, organisms to re-tier, or wording fixes here:
+- **Distractor + any antibiotic** → "Unnecessary treatment." / "{name} is not an AmpC-producing SEACHYMP organism. Good stewardship = not treating colonizers or bystanders." ✎ Change:
+- **Distractor + Release** → "Good call — no treatment needed." / "{name} is not an AmpC producer here. Releasing is correct — treat only what needs treating." ✎ Change:
+- **SEACHYMP + Release** → "This organism needed treatment." / "{name} is an AmpC-producing organism that required an antibiotic for this infection." ✎ Change:
+- **Mutated + Ceftriaxone** → "Ineffective against mutated form." / "This organism has adapted — ceftriaxone is no longer effective. Switch to Cefepime or a carbapenem." ✎ Change:
+- **Mutated + Cefepime _or_ Carbapenem** → "Correct — effective against the mutated form." / "{name} has de-repressed its AmpC. Cefepime and a carbapenem are both appropriate now; Ceftriaxone is no longer effective." ✎ Change:
+- **Correct drug for the case** → "Correct choice for this case." / _(the case rationale — see L3 table above)_ ✎ Change:
+- **Wrong drug** → "Not the best choice here." / _(case rationale)_ + " Preferred: {correct drug}." ✎ Change:
+
+---
+
+## Mutation banners (shown on the mutated form)
+
+- **Level 2 / Level 3 capture card** → "**Mutated form.** Ceftriaxone is no longer effective — Cefepime and a carbapenem are both appropriate." ✎ Change:
+- **Level 1 info card** → "**Mutated form detected.** Ceftriaxone is now flagged ineffective — Cefepime and a carbapenem are both appropriate." ✎ Change:
+- **Level 1 mutation toast** → "{name} has adapted — resistance selected! Cefepime and a carbapenem are both appropriate." ✎ Change:
+- **Level 2 / Level 3 mutation toast** → "{name} has adapted — repeated Ceftriaxone selected for resistance. Switch to Cefepime or a carbapenem." ✎ Change:
+- **How to Play** → "The organism has adapted. Resistance selected!" / "In mutated form, Ceftriaxone is flagged ineffective. You must switch to **Cefepime or a carbapenem**." ✎ Change:
+
+---
+
+## Per-organism comments (CATCH blurb + teaching point)
+
+For each organism: **art** = the sea-creature sprite now shown; **catch blurb** = the line shown
+when the bug is caught (capture card); **teaching point** = the clinical note. Edit on the ✎ lines.
+(⚠ = blurb still describes the old placeholder creature, not the current art.)
+
+### SEACHYMP — high-risk AmpC
+
+**Enterobacter cloacae** — `enterobacter` · art: spiky-pufferfish
+- Catch blurb: "A deep-sea puffer beast armored in heavy plates, glowing eyes radiating defiance. Clinically: among the most clinically important AmpC producers — Cefepime preferred for serious infections." — ✎ Change:
+- Teaching: "Enterobacter cloacae is HIGH-risk AmpC. De-repression risk is significant. Cefepime (or a carbapenem) is preferred over 3rd-gen cephalosporins for serious infections." — ✎ Change:
+
+**Citrobacter freundii** — `citrobacter` · art: coconut-crab
+- Catch blurb: "Massive claws, impenetrable shell — this armored crab tank will not yield easily. Clinically: one of the classic high-risk AmpC producers; Cefepime strongly preferred for serious infections." — ✎ Change:
+- Teaching: "Citrobacter freundii is HIGH-risk AmpC. Like Enterobacter, de-repression is a real clinical concern. Prefer Cefepime for serious infections." — ✎ Change:
+
+**Klebsiella aerogenes** (bonus) — `klebsiella_aerogenes` · art: lionfish
+- Catch blurb: "An orange spiked lionfish — beautiful but aggressive, with venom to match. Clinically: reclassified from Enterobacter; shares the high-risk AmpC profile; Cefepime strongly preferred." — ✎ Change:
+- Teaching: "Klebsiella aerogenes (formerly Enterobacter aerogenes) is HIGH-risk AmpC. Cefepime preferred over 3rd-gen cephalosporins for serious infections. Bonus organism — not part of the classic SEACHYMP mnemonic." — ✎ Change:
+
+### SEACHYMP — low-risk AmpC
+
+**Serratia marcescens** — `serratia` · art: base-jellyfish
+- Catch blurb: "A rosy jellyfish who fancies itself a pirate — mischievous, showy, and prone to unexpected escapes. Clinically: an AmpC-producing gram-negative often found in healthcare settings; usually low induction risk." — ✎ Change:
+- Teaching: "Serratia is an AmpC producer. For serious infections, 3rd-gen cephalosporins (e.g. Ceftriaxone) are often acceptable at low inoculum — but watch for inducible resistance." — ✎ Change:
+
+**Aeromonas hydrophila** — `aeromonas` · art: blue-dragon-nudibranch
+- Catch blurb: "A squishy sea-slug with a leech mouth — surprisingly docile until cornered. Clinically: a waterborne gram-negative with low-risk AmpC; Ceftriaxone usually works well." — ✎ Change:
+- Teaching: "Aeromonas has inducible AmpC but is generally low-risk for de-repression. Ceftriaxone is appropriate for most infections; escalate to Cefepime for serious or high-inoculum cases." — ✎ Change:
+
+**Hafnia alvei** — `hafnia` · art: cowfish ⚠ blurb says "blobfish"
+- Catch blurb: "A purple blobfish with a perpetually sad face — ugly-cute and mostly harmless. Clinically: infrequent pathogen, low AmpC induction risk; Ceftriaxone often sufficient." — ✎ Change:
+- Teaching: "Hafnia alvei is a low-risk AmpC producer. Ceftriaxone is typically acceptable; clinical data for induction is limited." — ✎ Change:
+
+**Yersinia enterocolitica** — `yersinia` · art: hermit-crab
+- Catch blurb: "A tiny blue hermit crab, curious and quick, scuttling between coral. Clinically: low induction risk; most invasive Yersinia infections are self-limited — use Ceftriaxone or Cefepime when treatment is needed." — ✎ Change:
+- Teaching: "Yersinia enterocolitica produces AmpC but is generally low-risk for de-repression. Most infections are self-limited; when treatment is indicated, Ceftriaxone or Cefepime are appropriate." — ✎ Change:
+
+**Morganella morganii** — `morganella` · art: moray-eel
+- Catch blurb: "A sneaky moray eel that peers from rocky crevices with narrow, calculating eyes. Clinically: intrinsic resistance to ampicillin; AmpC induction risk is modest; Ceftriaxone usually adequate." — ✎ Change:
+- Teaching: "Morganella morganii has inducible AmpC and is intrinsically resistant to many beta-lactams. For most infections Ceftriaxone is acceptable; watch serious/high-inoculum cases." — ✎ Change:
+
+**Providencia stuartii** — `providencia` · art: sea-urchin ⚠ blurb says "sea cucumber"
+- Catch blurb: "A pink sea cucumber covered in spines — looks menacing but is surprisingly cute up close. Clinically: low induction risk AmpC; serious infections may require broader coverage." — ✎ Change:
+- Teaching: "Providencia species produce inducible AmpC. Usually low risk; carbapenems may be needed for resistant strains." — ✎ Change:
+
+### Non-AmpC distractors — friendly reef life (Release / don't treat)
+
+**Reef Clownfish** (E. coli context) — `reef_clownfish` · art: dumbo-octopus ⚠ blurb/name say "clownfish"
+- Catch blurb: "A cheerful orange clownfish darting between sea anemones. Not a SEACHYMP target! Good stewardship = knowing when NOT to intervene." — ✎ Change:
+- Teaching: "Not an AmpC producer in this reef context. Leave it alone — good stewardship means NOT treating what doesn't need treating." — ✎ Change:
+
+**Coral** — `starfish` · art: christmas-tree-worm
+- Catch blurb: "A burst of colorful coral, feathery fronds swaying in the current. Totally harmless reef life — protect it, don't treat it." — ✎ Change:
+- Teaching: "Not a SEACHYMP organism — just healthy reef coral. Part of a thriving ecosystem; leave it be!" — ✎ Change:
+
+**Friendly Clam** — `friendly_crab` · art: pearl-oyster
+- Catch blurb: "A pearly clam resting half-open on the sand, a glimpse of pearl inside. Not a SEACHYMP organism — don't treat what you don't need to." — ✎ Change:
+- Teaching: "Not a SEACHYMP target! A harmless reef clam. Reserve interventions for the organisms that need them." — ✎ Change:
+
+### Non-AmpC gram-negative distractors (look-alikes)
+
+**E. coli** — `ecoli` · art: cuttlefish ⚠ blurb says "reef minnow"
+- Catch blurb: "A quick little reef minnow flitting through the shallows. A common gram-negative — but not one of the inducible-AmpC group you're patrolling for." — ✎ Change:
+- Teaching: "Escherichia coli is not a chromosomal AmpC producer of the SEACHYMP type. Treat per susceptibilities; it does not carry the inducible-AmpC de-repression concern." — ✎ Change:
+
+**Klebsiella pneumoniae** — `kpneumoniae` · art: nautilus ⚠ blurb says "blue reef fish"
+- Catch blurb: "A plump blue reef fish drifting calmly past the coral. Not part of the inducible-AmpC group — don't confuse it with its cousin K. aerogenes." — ✎ Change:
+- Teaching: "Klebsiella pneumoniae is not an inducible chromosomal AmpC producer (distinct from K. aerogenes). Resistance concerns are ESBL/carbapenemase, not de-repression." — ✎ Change:
+
+**Klebsiella oxytoca** — `koxytoca` · art: ribbon-eel ⚠ blurb says "ribbon-fish"
+- Catch blurb: "A slender teal ribbon-fish weaving lazily through the water. A look-alike that is not one of your inducible-AmpC targets." — ✎ Change:
+- Teaching: "Klebsiella oxytoca is not an inducible chromosomal AmpC producer of the SEACHYMP type. It carries a chromosomal class A beta-lactamase, not the AmpC de-repression risk." — ✎ Change:
+
+**Citrobacter koseri** — `ckoseri` · art: stingray ⚠ blurb says "spotted goby"
+- Catch blurb: "A sandy spotted goby resting on a ledge, watching the current. Despite the Citrobacter name, this one is not a high-risk AmpC organism like C. freundii." — ✎ Change:
+- Teaching: "Citrobacter koseri is NOT a high-risk inducible-AmpC producer (unlike C. freundii). An easy trap — the genus matters less than the species here." — ✎ Change:
+
+**Proteus mirabilis** — `pmirabilis` · art: mimic-octopus ⚠ blurb says "wrasse"
+- Catch blurb: "A pink wrasse darting in restless zig-zags across the reef. Not an inducible-AmpC organism — leave it to swim." — ✎ Change:
+- Teaching: "Proteus mirabilis does not carry inducible chromosomal AmpC. It is intrinsically resistant to a few agents but is not part of the de-repression group." — ✎ Change:
+
+**Proteus penneri** — `ppenneri` · art: sand-dollar ⚠ blurb says "sand-eel"
+- Catch blurb: "A tan sand-eel half-buried in the seabed, barely stirring. Another Proteus that is not one of your inducible-AmpC targets." — ✎ Change:
+- Teaching: "Proteus penneri is not an inducible chromosomal AmpC producer of the SEACHYMP type. Treat per susceptibilities." — ✎ Change:
+
+### Non-AmpC gram-positive distractors (wrong kingdom)
+
+**Enterococcus faecalis** — `efaecalis` · art: crown-jellyfish ⚠ blurb says "anemone"
+- Catch blurb: "A round rosy anemone swaying gently on a rock. A gram-positive bystander — AmpC stewardship doesn't apply here at all." — ✎ Change:
+- Teaching: "Enterococcus faecalis is a gram-POSITIVE organism — AmpC has nothing to do with it. A pure distractor." — ✎ Change:
+
+**Staphylococcus aureus** — `saureus` · art: tiger-cowrie ⚠ blurb says "coral polyps"
+- Catch blurb: "A cluster of golden coral polyps catching the light. Gram-positive and entirely off your AmpC patrol list." — ✎ Change:
+- Teaching: "Staphylococcus aureus is a gram-POSITIVE coccus in clusters — no AmpC involvement. A pure distractor." — ✎ Change:
+
+**Streptococcus pneumoniae** — `spneumoniae` · art: nomad-jellyfish ⚠ blurb says "shells"
+- Catch blurb: "A pair of violet shells nestled together on the sand. Gram-positive — nothing to do with the inducible-AmpC creatures you're after." — ✎ Change:
+- Teaching: "Streptococcus pneumoniae is a gram-POSITIVE diplococcus — no AmpC involvement. A pure distractor." — ✎ Change:
+
+**Enterococcus faecium** — `efaecium` · art: manta-ray ⚠ blurb says "anemone"
+- Catch blurb: "A violet anemone with slow, drifting tendrils. Another gram-positive bystander outside your AmpC stewardship scope." — ✎ Change:
+- Teaching: "Enterococcus faecium is a gram-POSITIVE organism — no AmpC relevance. A pure distractor." — ✎ Change:
+
+---
+
+## Global notes (free text — anything cross-cutting)
 
 -
 -
 -
-
----
-
-## Resolved 2026-06-04
-
-The following four decisions were adjudicated and applied in one implementation pass:
-
-1. **TMP-SMX and Fluoroquinolones removed entirely.** Both weapon objects deleted from `weapons.js`; `INEFFECTIVE_ON_MUTATED` reduced to `["ceftriaxone"]`; all banner text, Level 2/3 inline checks, `InfoCard`, and `HowToPlay` updated to single-drug phrasing.
-2. **Carbapenem is now acceptable/correct for high-risk AmpC and mutated organisms.** `classifyChoice` returns `status: "acceptable", isCorrect: true` when `tier === "high"`, with "reserve when possible" messaging. Unchanged for low-risk (`status: "reserve", isCorrect: false`). Mutated organisms retain `riskTier: "high"`, so the high-risk branch covers them automatically.
-3. **L3-9 (Aeromonas wound):** `correctDecision` changed to `"ceftriaxone"`, duration `"5–7 days"`, rationale reframed as low-risk AmpC with adequate source control.
-4. **Duration edits applied as display-only strings** across 14 cases; rationales updated to match. Cases removed: `case_citrobacter_meningitis`, `case_aeromonas_gastroenteritis`, `case_yersinia_enteritis`, `case_yersinia_bacteremia`. Final Level 3 case count: **16**.

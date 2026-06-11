@@ -9,7 +9,7 @@
  *   Low-risk AmpC (Serratia, Aeromonas, Hafnia, Yersinia, Morganella, Providencia) →
  *     ceftriaxone often acceptable for routine infection, but cefepime for
  *     endovascular, prolonged, or high-inoculum infections.
- *   Carbapenems reserved for confirmed resistance or when all else fails.
+ *   Carbapenems reserved for mutated AmpC organisms resistant to Cefepime, and for ESBL producers.
  *   Non-SEACHYMP distractors: release (colonizer/contaminant — don't treat).
  */
 

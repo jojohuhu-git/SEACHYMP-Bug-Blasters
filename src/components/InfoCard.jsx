@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { monogramOf } from "../data/organisms.js";
+import OrganismImage from "./OrganismImage.jsx";
 import "./InfoCard.css";
 
 /**
@@ -19,7 +19,6 @@ export default function InfoCard({ org, mutated, onDecide, onClose, alreadyInEnc
 
   // Colored shape placeholder art — no emoji
   const artBg = (org.color || "#38b2e8") + "22";
-  const monogram = monogramOf(org);
 
   function handleDecide(d) {
     setDecision(d);
@@ -62,12 +61,7 @@ export default function InfoCard({ org, mutated, onDecide, onClose, alreadyInEnc
         {/* Header — same for both views */}
         <div className="info-header" style={{ borderTopColor: org.isSeachymp ? org.color : "#94a3b8" }}>
           <div className="info-art" style={{ background: artBg, border: `2px solid ${org.color || "#38b2e8"}` }}>
-            <span
-              className="info-art-mono"
-              style={{ color: org.color || "#38b2e8" }}
-            >
-              {monogram}
-            </span>
+            <OrganismImage org={org} size={62} />
             {mutated && <span className="info-mutated-tag">MUTATED</span>}
           </div>
           <div className="info-title-block">
@@ -88,7 +82,7 @@ export default function InfoCard({ org, mutated, onDecide, onClose, alreadyInEnc
 
           {mutated && (
             <div className="info-mutation-warn">
-              <strong>Mutated form detected.</strong> Ceftriaxone is now flagged ineffective. Prefer Cefepime; a carbapenem is acceptable when needed.
+              <strong>Mutated form detected.</strong> Ceftriaxone is now flagged ineffective — Cefepime and a carbapenem are both appropriate.
             </div>
           )}
 

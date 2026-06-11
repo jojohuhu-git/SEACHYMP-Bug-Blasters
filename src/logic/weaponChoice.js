@@ -74,6 +74,17 @@ export function classifyChoice(org, weaponId, mutated) {
   if (weaponId === "cefepime") {
     // Always effective for both tiers
     if (tier === "high") {
+      if (mutated) {
+        // Mutated/de-repressed: Cefepime and a carbapenem are co-equal choices.
+        return {
+          status: "preferred",
+          heading: "Correct — effective against the mutated form.",
+          feedback:
+            org.name +
+            " has de-repressed its AmpC. Cefepime and a carbapenem are both appropriate now — Ceftriaxone is no longer effective.",
+          isCorrect: true,
+        };
+      }
       return {
         status: "preferred",
         heading: "Correct — preferred choice.",
@@ -118,13 +129,24 @@ export function classifyChoice(org, weaponId, mutated) {
 
   if (weaponId === "carbapenem") {
     if (tier === "high") {
+      if (mutated) {
+        // Mutated/de-repressed: Cefepime and a carbapenem are co-equal choices.
+        return {
+          status: "preferred",
+          heading: "Correct — effective against the mutated form.",
+          feedback:
+            org.name +
+            " has de-repressed its AmpC. Cefepime and a carbapenem are both appropriate now — Ceftriaxone is no longer effective.",
+          isCorrect: true,
+        };
+      }
       return {
         status: "acceptable",
         heading: "Acceptable — but reserve it.",
         feedback:
-          "Carbapenems are acceptable for high-risk AmpC organisms and confirmed-mutated forms, but Cefepime is the preferred first-line agent for " +
+          "Carbapenems work against high-risk AmpC organisms, but Cefepime is preferred first-line for " +
           org.name +
-          ". Reserve carbapenems for confirmed resistance, ESBL/carbapenemase producers, or when all else fails.",
+          ". Reserve carbapenems for mutated AmpC organisms that are resistant to Cefepime, and for ESBL producers.",
         isCorrect: true,
       };
     }
@@ -133,7 +155,7 @@ export function classifyChoice(org, weaponId, mutated) {
       status: "reserve",
       heading: "Works, but reserve it.",
       feedback:
-        "Carbapenems are effective here, but they should be reserved for confirmed resistance, ESBL/carbapenemase producers, or when all else fails. " +
+        "Carbapenems are effective here, but they should be reserved for mutated AmpC organisms resistant to Cefepime and for ESBL producers. " +
         "Ceftriaxone or Cefepime is preferred for this low-risk organism.",
       isCorrect: false,
     };
