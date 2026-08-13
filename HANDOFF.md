@@ -1,6 +1,6 @@
 # SEACHYMP: Bug Blasters — Session Handoff
 
-_Last updated: 2026-06-11_
+_Last updated: 2026-08-12_
 
 ## Current state
 - Branch: `main`, tracking `origin` (`github.com/jojohuhu-git/SEACHYMP-Bug-Blasters`, public).
@@ -10,6 +10,106 @@ _Last updated: 2026-06-11_
 - The illustrated sea-creature art is live on the canvas and all HTML surfaces; Captain
   has gun/net poses; mutation + kill effects are animated. See CLAUDE.md →
   "Illustrated creature art" for the full architecture.
+- **Uncommitted (2026-08-12):** denser reef stages, more dramatic mutation/kill
+  effects, a fish-direction bug fix, humpback whales, 3 organism art/text fixes, and
+  weapon-specific firing poses. See "Most recent work" below — not yet committed/pushed.
+
+## Most recent work (2026-08-12, part 4) — gun pose duration
+- `GUN_DUR` in `src/logic/playerRenderer.js` bumped from 0.35s to 1.0s so the
+  weapon-specific pose (see part 3 below) actually has time to read before the shot
+  resolves — 0.35s was too brief to see which weapon was drawn. 1.0s stays comfortably
+  under the ~1.1-1.4s window before the result card reappears (shot flight ~0.83s +
+  kill/mutate/pulse effect ~0.3-0.55s), so it isn't cut off early in the common cases.
+  Verified live — could now catch the pose in an ordinary screenshot with no timing
+  hacks needed (unlike the part 3 verification, which had to temporarily slow the
+  animation to catch a frame at the old 0.35s duration). Also fixed a stray leftover
+  comment artifact on that line from earlier editing (`// seconds before commit`) that
+  didn't reflect any real state — just cleaned up while touching the line.
+
+## Most recent work (2026-08-12, part 3) — weapon-specific firing poses
+- The Captain's "gun" pose (`src/logic/playerRenderer.js`) previously drew one generic
+  amber gun regardless of which antibiotic was chosen. Now it draws the actual weapon:
+  - **Ceftriaxone → Blue Bubble Cannon** (`drawBubbleCannon`): stubby rounded barrel,
+    bell-mouth muzzle, puffs a small cluster of rising bubbles instead of a spark flash.
+  - **Cefepime → Purple Electric Harpoon** (`drawElectricHarpoon`): long barbed shaft,
+    jagged purple electric-arc discharge at the tip.
+  - **Carbapenem → Golden Anchor Launcher** (`drawAnchorLauncher`): heavy banded barrel
+    with a small anchor icon at the muzzle, bigger/slower golden burst.
+  - Recoil kick is now sized per weapon (`WEAPON_RECOIL`: bubble cannon lightest,
+    anchor launcher heaviest) so the heavier weapon visibly kicks the diver back
+    further — part of making it read as "natural."
+  - `triggerPose(state, "gun", tx, ty, weaponId)` gained a `weaponId` param; wired
+    through both call sites (`Level2Scene.jsx`, `Level3Scene.jsx`). A generic-gun
+    fallback (`drawGenericGun`) still exists if `weaponId` is ever missing.
+- **Verified:** `npm run build` + `npm run lint` clean, no console errors. Live-checked
+  by temporarily stretching the pose/shot/fade timing constants (reverted after — see
+  the clean `grep -rn "TEMP for visual QA"` check) to catch a frame mid-animation:
+  confirmed the Purple Electric Harpoon renders correctly in hand with its electric-arc
+  muzzle effect and a purple projectile in flight. The other two weapons share the same
+  dispatch path (`WEAPON_RENDERERS[weaponId]`) and were not independently screenshotted
+  this session — low risk given the shared, lint/build-clean mechanism, but worth a
+  quick visual glance next session before considering this fully closed.
+
+## Most recent work (2026-08-12, part 2) — organism art review + 3 fixes
+- Reviewed all 22 organism sprites directly against their blurb text/name (most
+  blurbs were already flagged stale in `docs/RULES.md` from before the art swap).
+  Found one real name/art mismatch and one clean swap opportunity; applied both:
+  - **`reef_clownfish` renamed to "Dumbo Octopus"** — its art was always
+    `dumbo-octopus.webp` (never a clownfish), and no clownfish-style fish art exists
+    in the library to swap in instead. Renamed to match the art, same pattern as the
+    earlier `starfish`→"Coral" / `friendly_crab`→"Friendly Clam" fixes. Blurb + emoji
+    (🐠→🐙) + color updated to match; `id` kept as `reef_clownfish` for save-compat.
+  - **Swapped `saureus` ↔ `spneumoniae` art tokens** (`nomad-jellyfish` ↔
+    `tiger-cowrie`). Strep pneumoniae's blurb says "a pair of... shells" — it now
+    gets the actual shell art instead of a jellyfish. Staph aureus's "coral polyps"
+    blurb was never a great fit for either asset, so this is a lateral move for it and
+    a clear improvement for Strep pneumoniae. Blurbs + colors updated to match the new
+    art on both.
+  - All other mismatched organisms (K. pneumoniae/nautilus, P. mirabilis/mimic-octopus,
+    P. penneri/sand-dollar, E. faecium/manta-ray) have no better-fitting asset left in
+    the closed 22-sprite pool (all fish-shaped art is already claimed by real SEACHYMP
+    organisms) — left as-is, still flagged in `docs/RULES.md`.
+  - `docs/RULES.md` updated to match (the three entries' art/blurb/name + the
+    distractor-tier table row).
+- **Verified:** `npm run build` + `npm run lint` clean. Live-checked the Encyclopedia
+  screen (localStorage `bugblasters_encyclopedia` temporarily patched to include the
+  three changed organisms for testing) — all three render with matching art/name/blurb.
+  No console errors.
+
+## Most recent work (2026-08-12) — denser reef, dramatic mutation/kill effects
+- **Reef population** (`src/logic/reefRenderer.js`): added `drawJellyfish` (pulsing
+  bell, trailing tentacles) and `drawRay` (gliding, flapping wings) as new decorative
+  reef life. Bumped `STAGE[]` counts at every stage except barren — sprouting/growing/
+  thriving all read noticeably fuller (e.g. thriving: 12→18 fish, 5→7 shells, 3→4
+  seahorses, plus 3 jellyfish + 1 ray). Live-verified at the Thriving stage.
+- **Mutation effect, more dramatic** (`src/logic/organismRenderer.js`): bigger glow
+  halo (radius/alpha both increased), stronger shake, more ember particles (6→10) plus
+  a new second particle type (short red spark/crack lines). Mutation flash ring
+  (`src/logic/shotAnimation.js` `drawOrganismEffects`) now has a second, wider, fainter
+  orange trailing ring. `applyMutateFlash` slowed (0.06→0.045/frame) so the burst reads
+  longer.
+- **Kill explosion, more dramatic** (`src/logic/organismSprites.js`
+  `drawKillExplosion`): more debris shards (10→16, thrown farther), a new spark-streak
+  particle type, a second colored ring trailing the white burst ring (color
+  escalation), more bubbles (6→9), longer/brighter flash. `applyKillEffect` slowed
+  (0.045→0.03/frame) for a longer burst.
+- **New: level-wide screen shake + flash** (`src/logic/screenEffects.js`, new file) —
+  a brief camera shake + full-canvas color flash (white on kill, red on mutate) wired
+  into both `Level2Scene.jsx` and `Level3Scene.jsx` (Level 1 has no shooting animation,
+  so it's untouched). Fully skipped under `prefers-reduced-motion` — verified the gate
+  is intact (`triggerScreenEffect` checks `prefersReducedMotion()` before doing
+  anything, matching the existing per-organism reduced-motion convention).
+- **Verification:** `npm run build` and `npm run lint` both clean. Live-walked Level 2
+  at the Thriving reef stage (localStorage `identifiedCount` bumped to 8 for testing):
+  confirmed jellyfish/ray/denser coral render, a real kill (Klebsiella aerogenes +
+  Cefepime) plays through with the result card still correctly deferred until the
+  canvas effect finishes (`pendingRevealRef` timing untouched), and a real mutation
+  trigger (3x wrong Ceftriaxone on Citrobacter freundii) fires the mutation banner with
+  no console errors. Level 3 loads and renders cleanly with the same wiring (not
+  click-tested end-to-end this session — same shared code path as Level 2).
+- **Not done:** did not commit or push. Next session (or later this one): review the
+  diff, commit, and deploy per the repo's normal flow if the owner is happy with the
+  effects.
 
 ## Most recent work (2026-06-11) — creature art, animations, mutated rule, docs
 - **Creature sprites** replace the placeholder circles/monograms everywhere. 22 WebP

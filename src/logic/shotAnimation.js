@@ -113,7 +113,7 @@ export function drawShots(ctx, shots) {
  */
 export function applyKillEffect(org) {
   if (!org.fading) return false;
-  org.fadeProgress = (org.fadeProgress || 0) + 0.045; // ~22 frames
+  org.fadeProgress = (org.fadeProgress || 0) + 0.03; // ~33 frames, longer burst
   return org.fadeProgress >= 1;
 }
 
@@ -124,7 +124,7 @@ export function applyKillEffect(org) {
  */
 export function applyMutateFlash(org) {
   if (org.mutateFlash == null) return false;
-  org.mutateFlash += 0.06;
+  org.mutateFlash += 0.045; // ~22 frames, longer burst
   return org.mutateFlash >= 1;
 }
 
@@ -161,16 +161,22 @@ export function drawOrganismEffects(ctx, org, x, y, radius) {
     ctx.restore();
   }
 
-  // Mutation flash: red pulsing ring expanding outward
+  // Mutation flash: red pulsing ring expanding outward, trailed by a wider
+  // fainter orange ring for a bigger, more layered burst.
   if (org.mutateFlash != null) {
     const p = Math.min(1, org.mutateFlash);
-    const expandR = radius + p * 24;
     ctx.save();
-    ctx.globalAlpha = (1 - p) * 0.7;
+    ctx.globalAlpha = (1 - p) * 0.75;
     ctx.beginPath();
-    ctx.arc(x, y, expandR, 0, Math.PI * 2);
+    ctx.arc(x, y, radius + p * 34, 0, Math.PI * 2);
     ctx.strokeStyle = "#ef4444";
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 3.5;
+    ctx.stroke();
+    ctx.globalAlpha = (1 - p) * 0.4;
+    ctx.beginPath();
+    ctx.arc(x, y, radius + p * 48, 0, Math.PI * 2);
+    ctx.strokeStyle = "#fb923c";
+    ctx.lineWidth = 2;
     ctx.stroke();
     ctx.restore();
   }

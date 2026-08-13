@@ -33,17 +33,34 @@ const _now = () => (typeof performance !== "undefined" ? performance.now() : Dat
 // Deterministic from time + per-instance seed — no per-frame particle state.
 function drawMutationParticles(ctx, x, y, radius, seed) {
   const t = _now();
-  const N = 6;
+  const N = 10;
   ctx.save();
   for (let i = 0; i < N; i++) {
     const phase = (t * 0.6 + i / N + (seed % 1)) % 1; // 0..1 lifecycle
-    const px = x + Math.sin(t * 3 + i * 1.7 + seed) * radius * 0.5;
-    const py = y + radius * 0.2 - phase * radius * 2.3; // drift upward
-    ctx.globalAlpha = (1 - phase) * 0.7;
+    const px = x + Math.sin(t * 3 + i * 1.7 + seed) * radius * 0.6;
+    const py = y + radius * 0.2 - phase * radius * 2.8; // drift upward
+    ctx.globalAlpha = (1 - phase) * 0.75;
     ctx.fillStyle = i % 2 ? "#ef4444" : "#fb923c";
     ctx.beginPath();
-    ctx.arc(px, py, 1.3 + (1 - phase) * 2.2, 0, Math.PI * 2);
+    ctx.arc(px, py, 1.5 + (1 - phase) * 2.6, 0, Math.PI * 2);
     ctx.fill();
+  }
+  // Sparking crack lines — a second particle type, brief and jagged, closer
+  // to the body than the drifting embers.
+  const S = 4;
+  ctx.strokeStyle = "#fca5a5";
+  ctx.lineWidth = 1.2;
+  ctx.lineCap = "round";
+  for (let i = 0; i < S; i++) {
+    const sphase = (t * 1.4 + i / S + (seed % 1) * 0.5) % 1;
+    const ang = (i / S) * Math.PI * 2 + seed;
+    const inner = radius * (0.9 + sphase * 0.3);
+    const outer = radius * (1.1 + sphase * 0.7);
+    ctx.globalAlpha = (1 - sphase) * 0.8;
+    ctx.beginPath();
+    ctx.moveTo(x + Math.cos(ang) * inner, y + Math.sin(ang) * inner);
+    ctx.lineTo(x + Math.cos(ang) * outer, y + Math.sin(ang) * outer);
+    ctx.stroke();
   }
   ctx.restore();
 }
@@ -128,14 +145,14 @@ export function drawOrganism(ctx, org, x, y, radius, mutated) {
       const seed = org._mutSeed;
       const t = _now();
       const pulse = reduce ? 0.5 : 0.5 + 0.5 * Math.sin(t * 4 + seed); // 0..1
-      const dx = reduce ? 0 : Math.sin(t * 9 + seed) * 1.6;            // shake
-      const dy = reduce ? 0 : Math.cos(t * 8 + seed) * 1.2;
-      opts = { dx, dy, tintAlpha: 0.3 + 0.18 * pulse };
+      const dx = reduce ? 0 : Math.sin(t * 9 + seed) * 2.4;            // shake
+      const dy = reduce ? 0 : Math.cos(t * 8 + seed) * 1.9;
+      opts = { dx, dy, tintAlpha: 0.32 + 0.22 * pulse };
 
       // Pulsing red glow halo behind the (shaken) sprite.
       ctx.save();
-      const glowR = radius * (1.7 + 0.15 * pulse);
-      const ga = 0.35 + 0.2 * pulse;
+      const glowR = radius * (2.0 + 0.3 * pulse);
+      const ga = 0.4 + 0.3 * pulse;
       const g = ctx.createRadialGradient(x + dx, y + dy, radius * 0.3, x + dx, y + dy, glowR);
       g.addColorStop(0, `rgba(239,68,68,${ga})`);
       g.addColorStop(1, "rgba(239,68,68,0)");

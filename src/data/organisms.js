@@ -193,19 +193,19 @@ export const ORGANISMS = [
 
   {
     id: "reef_clownfish",
-    name: "Reef Clownfish",
+    name: "Dumbo Octopus",
     species: "E. coli (non-AmpC context)",
     isSeachymp: false,
     bonus: false,
     riskTier: null,
     artToken: "dumbo-octopus",
-    color: "#ff8c00",
-    emoji: "🐠",
+    color: "#c9a3c4",
+    emoji: "🐙",
     difficulty: "easy",
     teachingPoint:
       "Not an AmpC producer in this reef context. Leave it alone — good stewardship means NOT treating what doesn't need treating.",
     blurb:
-      "A cheerful orange clownfish darting between sea anemones. Not a SEACHYMP target! Good stewardship = knowing when NOT to intervene.",
+      "A round-eyed dumbo octopus, ear-like fins flared, drifting gently over the sand. Not a SEACHYMP target! Good stewardship = knowing when NOT to intervene.",
   },
 
   {
@@ -373,14 +373,14 @@ export const ORGANISMS = [
     isSeachymp: false,
     bonus: false,
     riskTier: null,
-    artToken: "tiger-cowrie",
-    color: "#e0b020",
-    emoji: "🪸",
+    artToken: "nomad-jellyfish",
+    color: "#a8d4e8",
+    emoji: "🪼",
     difficulty: "easy",
     teachingPoint:
       "Staphylococcus aureus is a gram-POSITIVE coccus in clusters — no AmpC involvement. A pure distractor.",
     blurb:
-      "A cluster of golden coral polyps catching the light. Gram-positive and entirely off your AmpC patrol list.",
+      "A pale blue jellyfish drifting with a gently domed bell. Gram-positive and entirely off your AmpC patrol list.",
   },
 
   {
@@ -390,14 +390,14 @@ export const ORGANISMS = [
     isSeachymp: false,
     bonus: false,
     riskTier: null,
-    artToken: "nomad-jellyfish",
-    color: "#7a6fc4",
+    artToken: "tiger-cowrie",
+    color: "#c9974a",
     emoji: "🐚",
     difficulty: "easy",
     teachingPoint:
       "Streptococcus pneumoniae is a gram-POSITIVE diplococcus — no AmpC involvement. A pure distractor.",
     blurb:
-      "A pair of violet shells nestled together on the sand. Gram-positive — nothing to do with the inducible-AmpC creatures you're after.",
+      "A leopard-spotted cowrie shell resting alone on the sand. Gram-positive — nothing to do with the inducible-AmpC creatures you're after.",
   },
 
   {

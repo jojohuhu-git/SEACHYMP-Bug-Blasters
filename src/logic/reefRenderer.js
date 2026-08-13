@@ -36,10 +36,10 @@ const CORAL_PALETTES = [
 
 // Per-stage tuning. Index 0 barren … 3 thriving.
 const STAGE = [
-  { reveal: 0.0,  sizeMax: 0.0, fishes: 0,  shells: 0, starfish: 0, crabs: 0, anemones: 0, kelp: 0, mega: false, seahorses: 0 },
-  { reveal: 0.4,  sizeMax: 1.1, fishes: 2,  shells: 2, starfish: 0, crabs: 0, anemones: 1, kelp: 1, mega: false, seahorses: 0 },
-  { reveal: 0.72, sizeMax: 1.4, fishes: 6,  shells: 3, starfish: 1, crabs: 1, anemones: 3, kelp: 3, mega: false, seahorses: 1 },
-  { reveal: 1.0,  sizeMax: 1.8, fishes: 12, shells: 5, starfish: 2, crabs: 2, anemones: 5, kelp: 5, mega: true, seahorses: 3 },
+  { reveal: 0.0,  sizeMax: 0.0, fishes: 0,  shells: 0,  starfish: 0, crabs: 0, anemones: 0, kelp: 0,  mega: false, seahorses: 0, jellies: 0, rays: 0, whales: 0, clams: 0 },
+  { reveal: 0.4,  sizeMax: 1.1, fishes: 3,  shells: 4,  starfish: 0, crabs: 0, anemones: 2, kelp: 3,  mega: false, seahorses: 0, jellies: 0, rays: 0, whales: 0, clams: 0 },
+  { reveal: 0.72, sizeMax: 1.4, fishes: 9,  shells: 8,  starfish: 2, crabs: 2, anemones: 4, kelp: 6,  mega: false, seahorses: 2, jellies: 1, rays: 0, whales: 1, clams: 2 },
+  { reveal: 1.0,  sizeMax: 1.8, fishes: 18, shells: 14, starfish: 3, crabs: 3, anemones: 7, kelp: 10, mega: true,  seahorses: 4, jellies: 3, rays: 1, whales: 2, clams: 4 },
 ];
 
 const FISH_COLORS = ["#fbbf24", "#fb7185", "#60a5fa", "#34d399", "#f472b6", "#fdba74"];
@@ -374,6 +374,123 @@ function drawMegafauna(ctx, w, h, tick) {
   ctx.restore();
 }
 
+// Dedicated humpback whale — distinct from the background megafauna silhouette:
+// knobbly rostrum tubercles, a long trailing pectoral fin, a serrated fluke, and an
+// occasional blow-spout. Drawn with a per-instance seed so 1-2 can drift independently.
+function drawHumpbackWhale(ctx, w, h, tick, seed) {
+  const speed = 0.16 + rand(seed * 3.1) * 0.1;
+  const span = w + 420;
+  const dir = rand(seed) < 0.5 ? 1 : -1;
+  const raw = (tick * speed + rand(seed * 2) * span) % span;
+  const x = dir > 0 ? raw - 210 : span - raw - 210;
+  const y = h * (0.22 + rand(seed * 4) * 0.28) + Math.sin(tick * 0.008 + seed) * 12;
+  const s = h * (0.13 + rand(seed * 5) * 0.03);
+
+  ctx.save();
+  ctx.globalAlpha = 0.4;
+  ctx.fillStyle = "#0b1f33";
+  ctx.translate(x, y);
+  ctx.scale(dir, 1);
+
+  // Body
+  ctx.beginPath();
+  ctx.moveTo(-s * 2.5, 0);
+  ctx.quadraticCurveTo(-s * 0.4, -s * 1.0, s * 1.7, -s * 0.4);
+  ctx.quadraticCurveTo(s * 2.5, 0, s * 1.7, s * 0.4);
+  ctx.quadraticCurveTo(-s * 0.4, s * 0.95, -s * 2.5, 0);
+  ctx.fill();
+
+  // Rostrum tubercles (small bumps along the jaw — humpback signature)
+  ctx.fillStyle = "#051220";
+  for (let i = 0; i < 4; i++) {
+    ctx.beginPath();
+    ctx.arc(s * (1.35 + i * 0.18), -s * (0.22 - i * 0.02), s * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = "#0b1f33";
+
+  // Tail fluke, serrated trailing edge
+  ctx.beginPath();
+  ctx.moveTo(-s * 2.3, 0);
+  ctx.lineTo(-s * 3.3, -s * 0.85);
+  ctx.lineTo(-s * 2.9, -s * 0.15);
+  ctx.lineTo(-s * 2.6, 0);
+  ctx.lineTo(-s * 2.9, s * 0.15);
+  ctx.lineTo(-s * 3.3, s * 0.85);
+  ctx.closePath();
+  ctx.fill();
+
+  // Long trailing pectoral fin — distinctively oversized on a humpback
+  const finFlap = Math.sin(tick * 0.03 + seed) * 0.08;
+  ctx.save();
+  ctx.rotate(finFlap);
+  ctx.beginPath();
+  ctx.moveTo(s * 0.1, s * 0.5);
+  ctx.quadraticCurveTo(-s * 0.3, s * 1.6, s * 0.3, s * 2.1);
+  ctx.quadraticCurveTo(s * 0.6, s * 1.2, s * 0.7, s * 0.6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  ctx.restore();
+
+  // Blow-spout: a brief puff above the head, on a slow cycle.
+  const blowPhase = (tick * 0.6 + seed * 300) % 400;
+  if (blowPhase < 30) {
+    const bp = blowPhase / 30;
+    const headX = x + dir * s * 1.55;
+    const headY = y - s * 0.55 - bp * s * 1.4;
+    ctx.save();
+    ctx.globalAlpha = (1 - bp) * 0.35;
+    ctx.strokeStyle = "#e8f4ff";
+    ctx.lineWidth = 2;
+    for (let i = -1; i <= 1; i++) {
+      ctx.beginPath();
+      ctx.moveTo(headX + i * 3, headY + s * 0.3);
+      ctx.lineTo(headX + i * (7 + bp * 6), headY);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+// Small bivalve on the seabed that periodically opens to reveal a pearl-like
+// interior, then closes — a "seashell creature" distinct from the flat static shells.
+function drawClamCreature(ctx, x, baseY, sz, seed, tick) {
+  const cycle = ((tick * 0.02 + seed * 7) % 100) / 100; // 0..1
+  const openness = cycle < 0.5 ? Math.sin(cycle * Math.PI) : 0; // open then shut, rest closed
+  const gape = openness * sz * 0.55;
+  const shellCol = ["#fbcfe8", "#e9d5ff", "#fde68a"][Math.floor(rand(seed) * 3)];
+
+  ctx.save();
+  // Interior, only visible while open
+  if (gape > 0.5) {
+    ctx.fillStyle = "#fda4af";
+    ctx.beginPath();
+    ctx.ellipse(x, baseY - sz * 0.1, sz * 0.5, sz * 0.3, 0, 0, Math.PI);
+    ctx.fill();
+    ctx.fillStyle = "#fef3c7";
+    ctx.beginPath();
+    ctx.arc(x, baseY - sz * 0.15, sz * 0.14, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Bottom valve
+  ctx.fillStyle = shellCol;
+  ctx.beginPath();
+  ctx.ellipse(x, baseY + sz * 0.1, sz * 0.65, sz * 0.32, 0, 0, Math.PI);
+  ctx.fill();
+  // Top valve, hinged open by `gape`
+  ctx.save();
+  ctx.translate(x - sz * 0.6, baseY);
+  ctx.rotate(-gape / sz);
+  ctx.fillStyle = shellCol;
+  ctx.beginPath();
+  ctx.ellipse(sz * 0.6, 0, sz * 0.65, sz * 0.32, 0, Math.PI, 0);
+  ctx.fill();
+  ctx.restore();
+  ctx.restore();
+}
+
 function drawBubbleColumn(ctx, x, h, baseY, tick, seed) {
   ctx.strokeStyle = "rgba(191,227,255,0.5)";
   ctx.lineWidth = 1;
@@ -450,6 +567,58 @@ function drawSeahorse(ctx, cx, cy, sz, seed, tick) {
   ctx.restore();
 }
 
+// Drifting jellyfish: pulsing bell, trailing tentacles, semi-transparent.
+function drawJellyfish(ctx, x, y, sz, seed, tick) {
+  const pulse = 0.85 + 0.15 * Math.sin(tick * 0.05 + seed);
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.globalAlpha = 0.75;
+  ctx.fillStyle = "#e9d5ff";
+  ctx.beginPath();
+  ctx.ellipse(0, 0, sz * pulse, sz * 0.7 * pulse, 0, Math.PI, 0);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(233,213,255,0.6)";
+  ctx.lineWidth = Math.max(1, sz * 0.08);
+  ctx.lineCap = "round";
+  for (let t = -2; t <= 2; t++) {
+    const tx = t * sz * 0.28;
+    ctx.beginPath();
+    ctx.moveTo(tx, 0);
+    for (let i = 1; i <= 4; i++) {
+      const ty = i * sz * 0.35;
+      const sway = Math.sin(tick * 0.06 + seed + t + i) * sz * 0.15;
+      ctx.lineTo(tx + sway, ty);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// Slow ray gliding through the water column, wings flapping.
+function drawRay(ctx, x, y, sz, dir, tick, seed) {
+  const flap = Math.sin(tick * 0.05 + seed) * sz * 0.3;
+  ctx.save();
+  ctx.globalAlpha = 0.55;
+  ctx.translate(x, y);
+  ctx.scale(dir, 1);
+  ctx.fillStyle = "#7dd3fc";
+  ctx.beginPath();
+  ctx.moveTo(0, -sz * 0.15);
+  ctx.quadraticCurveTo(-sz * 0.6, -sz * 0.9 - flap, -sz * 1.5, -sz * 0.1);
+  ctx.quadraticCurveTo(-sz * 0.5, sz * 0.15, 0, sz * 0.05);
+  ctx.quadraticCurveTo(sz * 0.5, sz * 0.15, sz * 1.5, -sz * 0.1);
+  ctx.quadraticCurveTo(sz * 0.6, -sz * 0.9 + flap, 0, -sz * 0.15);
+  ctx.fill();
+  // whip tail
+  ctx.strokeStyle = "#7dd3fc";
+  ctx.lineWidth = Math.max(1, sz * 0.06);
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.quadraticCurveTo(sz * 0.8, sz * 0.3, sz * 1.9, sz * 0.15);
+  ctx.stroke();
+  ctx.restore();
+}
+
 // ── Main painter ──────────────────────────────────────────────────────────────
 
 export function drawReef(ctx, w, h, stageIdx, tick) {
@@ -463,6 +632,11 @@ export function drawReef(ctx, w, h, stageIdx, tick) {
   // Background megafauna drifts behind everything else.
   if (cfg.mega) drawMegafauna(ctx, w, h, tick);
 
+  // Dedicated humpback whale(s) — a denser reef gets 1-2 drifting independently.
+  for (let wh = 0; wh < (cfg.whales || 0); wh++) {
+    drawHumpbackWhale(ctx, w, h, tick, wh * 17.3 + 4);
+  }
+
   // Schooling fish roam the water column above the reef (stage-gated count).
   for (let f = 0; f < cfg.fishes; f++) {
     const fseed = f * 4.13 + 1;
@@ -470,7 +644,11 @@ export function drawReef(ctx, w, h, stageIdx, tick) {
     const speed = 0.4 + rand(fseed * 2) * 0.7;
     const sz = 5 + rand(fseed * 3) * 5;
     const span = w + 120;
-    const baseX = ((tick * speed * dir) + rand(fseed) * span) % span;
+    // NOTE: `dir` must only pick which side baseX is measured from below — folding
+    // it into this term made left-moving fish's baseX go deeply negative, and JS's
+    // `%` doesn't wrap negatives the way this code assumed, so they sat parked
+    // off-screen almost permanently. Every fish looked like it swam rightward.
+    const baseX = (tick * speed + rand(fseed) * span) % span;
     const x = dir > 0 ? baseX - 60 : span - baseX - 60;
     const y = h * 0.22 + rand(fseed * 5) * (h * 0.45) + Math.sin(tick * 0.03 + f) * 6;
     drawFish(ctx, x, y, sz, FISH_COLORS[f % FISH_COLORS.length], dir, tick, fseed);
@@ -535,6 +713,24 @@ export function drawReef(ctx, w, h, stageIdx, tick) {
     drawSeahorse(ctx, shx, shy, 12 + rand(sh * 2) * 5, sh * 5.3 + 1, tick);
   }
 
+  // Jellyfish drift slowly through the upper water column once the reef is growing.
+  for (let j = 0; j < (cfg.jellies || 0); j++) {
+    const jseed = j * 8.4 + 3;
+    const jx = ((j + 0.5) / Math.max(1, cfg.jellies)) * w + Math.sin(tick * 0.008 + jseed) * 40;
+    const jy = h * 0.15 + rand(jseed * 3) * (h * 0.3);
+    drawJellyfish(ctx, jx, jy, 10 + rand(jseed) * 6, jseed, tick);
+  }
+
+  // A ray glides slowly through the water on a thriving reef.
+  for (let r = 0; r < (cfg.rays || 0); r++) {
+    const rseed = r * 6.2 + 5;
+    const dir = rand(rseed) < 0.5 ? 1 : -1;
+    const span = w + 260;
+    const rx = dir > 0 ? ((tick * 0.15) % span) - 130 : span - (((tick * 0.15) % span)) - 130;
+    const ry = h * 0.28 + Math.sin(tick * 0.012 + rseed) * 20;
+    drawRay(ctx, rx, ry, 22 + rand(rseed) * 6, dir, tick, rseed);
+  }
+
   // Small static life on the sand.
   for (let s = 0; s < cfg.shells; s++) {
     const sx = ((s + 0.6) / cfg.shells) * w + (rand(s * 3.3) - 0.5) * 60;
@@ -547,6 +743,10 @@ export function drawReef(ctx, w, h, stageIdx, tick) {
   for (let c = 0; c < cfg.crabs; c++) {
     const cx = ((c + 0.5) / Math.max(1, cfg.crabs)) * w + (rand(c * 11.3) - 0.5) * 100;
     drawCrab(ctx, cx, h - bandH * 0.14, 9 + rand(c * 2) * 3, tick + c * 40);
+  }
+  for (let cl = 0; cl < (cfg.clams || 0); cl++) {
+    const clx = ((cl + 0.5) / Math.max(1, cfg.clams)) * w + (rand(cl * 9.9) - 0.5) * 90;
+    drawClamCreature(ctx, clx, h - bandH * 0.1, 7 + rand(cl * 3) * 3, cl * 4.4 + 2, tick);
   }
 
   // Bubble columns rise from a thriving reef.

@@ -17,6 +17,7 @@ import {
 import { drawOrganism } from "../logic/organismRenderer.js";
 import { drawPlayer, triggerPose } from "../logic/playerRenderer.js";
 import { drawReef } from "../logic/reefRenderer.js";
+import { triggerScreenEffect, tickScreenEffects, getShakeOffset, drawScreenFlash } from "../logic/screenEffects.js";
 import HUD from "../components/HUD.jsx";
 import "./Level2Scene.css";
 
@@ -336,8 +337,10 @@ export default function Level2Scene({ chymp, onMenu }) {
     if (shot.outcome === "kill" && org) {
       org.fading = true;
       org.fadeProgress = 0;
+      triggerScreenEffect(s, { kind: "kill" });
     } else if (shot.outcome === "mutate" && org) {
       org.mutateFlash = 0;
+      triggerScreenEffect(s, { kind: "mutate" });
     } else if (shot.outcome === "pulse" && org) {
       org.pulseProgress = 0;
     }
@@ -431,6 +434,10 @@ export default function Level2Scene({ chymp, onMenu }) {
       }
     }
 
+    tickScreenEffects(s);
+    const { dx: shakeDx, dy: shakeDy } = getShakeOffset(s);
+    ctx.save();
+    ctx.translate(shakeDx, shakeDy);
     drawOcean(ctx, s.w, s.h, s.tick);
     drawReef(ctx, s.w, s.h, s.reefStageIdx, s.tick);
     s.organisms.forEach((org) => {
@@ -439,6 +446,8 @@ export default function Level2Scene({ chymp, onMenu }) {
     });
     if (s.shots) drawShots(ctx, s.shots);
     drawPlayer(ctx, chymp, s.playerX, s.playerY, s.facingRight, s.pose);
+    ctx.restore();
+    drawScreenFlash(ctx, s.w, s.h, s);
 
     rafRef.current = requestAnimationFrame(loopRef.current);
   }, [chymp]);
@@ -620,7 +629,7 @@ export default function Level2Scene({ chymp, onMenu }) {
         orgInstanceId: org.id_instance,
         reducedMotion: false,
       });
-      triggerPose(s, "gun", canvasOrg.x, canvasOrg.y);
+      triggerPose(s, "gun", canvasOrg.x, canvasOrg.y, weaponId);
     } else {
       // Reduced motion or no canvas position — apply immediately without animation
       if (s && canvasOrg) {

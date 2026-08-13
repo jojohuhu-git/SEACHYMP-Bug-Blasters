@@ -154,48 +154,84 @@ export function drawKillExplosion(ctx, org, x, y, radius) {
   }
 
   // Growing, fading sprite with an early white flash.
-  const flash = p < 0.4 ? 0.85 * (1 - p / 0.4) : 0;
+  const flash = p < 0.45 ? 0.95 * (1 - p / 0.45) : 0;
   drawCreatureSprite(ctx, org, x, y, radius, false, {
-    scale: 1 + p * 0.6,
+    scale: 1 + p * 0.85,
     alpha: Math.max(0, 1 - p * 1.05),
     tintColor: "#ffffff",
     tintAlpha: flash,
   });
 
-  // Expanding white burst ring (early).
-  if (p < 0.6) {
+  const col = org.color || "#94a3b8";
+
+  // Expanding white burst ring, trailed by a slower colored ring (escalation).
+  if (p < 0.65) {
     ctx.save();
-    ctx.globalAlpha = (1 - p / 0.6) * 0.6;
+    ctx.globalAlpha = (1 - p / 0.65) * 0.7;
     ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(x, y, radius * (1 + p * 2.2), 0, Math.PI * 2);
+    ctx.arc(x, y, radius * (1 + p * 3.2), 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+  if (p > 0.1 && p < 0.85) {
+    const rp = (p - 0.1) / 0.75;
+    ctx.save();
+    ctx.globalAlpha = (1 - rp) * 0.5;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y, radius * (1 + rp * 2.4), 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
   }
 
   // Debris shards flung outward (organism color), gravity-tugged downward.
-  const N = 10;
-  const col = org.color || "#94a3b8";
+  const N = 16;
   ctx.save();
   for (let i = 0; i < N; i++) {
     const ang = (i / N) * Math.PI * 2 + (i % 2 ? 0.3 : 0);
-    const dist = p * radius * 2.6;
+    const dist = p * radius * 3.4;
     const px = x + Math.cos(ang) * dist;
-    const py = y + Math.sin(ang) * dist + p * p * radius * 0.8; // slight fall
+    const py = y + Math.sin(ang) * dist + p * p * radius * 1.1; // slight fall
     ctx.globalAlpha = (1 - p) * 0.9;
     ctx.fillStyle = col;
-    const sz = (1 - p) * 3 + 1;
+    const sz = (1 - p) * 3.6 + 1;
     ctx.fillRect(px - sz / 2, py - sz / 2, sz, sz);
   }
   ctx.restore();
 
+  // Sparks — thin bright streaks flung outward faster than the shards, gone
+  // early (a second, quicker particle type for visual variety).
+  if (p < 0.5) {
+    const SP = 8;
+    ctx.save();
+    ctx.strokeStyle = "#fff7cc";
+    ctx.lineWidth = 1.4;
+    ctx.lineCap = "round";
+    for (let i = 0; i < SP; i++) {
+      const ang = (i / SP) * Math.PI * 2 + 0.5;
+      const dist = p * radius * 4.2;
+      const px = x + Math.cos(ang) * dist;
+      const py = y + Math.sin(ang) * dist;
+      const tailX = x + Math.cos(ang) * dist * 0.7;
+      const tailY = y + Math.sin(ang) * dist * 0.7;
+      ctx.globalAlpha = (1 - p / 0.5) * 0.9;
+      ctx.beginPath();
+      ctx.moveTo(tailX, tailY);
+      ctx.lineTo(px, py);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   // Rising bubbles (treatment "cleared" cue).
   ctx.save();
-  for (let i = 0; i < 6; i++) {
-    const phase = Math.min(1, p + i * 0.04);
-    const bx = x + Math.sin(i * 2.1) * radius * 0.7;
-    const by = y - phase * radius * 2.4;
+  for (let i = 0; i < 9; i++) {
+    const phase = Math.min(1, p + i * 0.03);
+    const bx = x + Math.sin(i * 2.1) * radius * 0.9;
+    const by = y - phase * radius * 2.9;
     ctx.globalAlpha = (1 - phase) * 0.5;
     ctx.strokeStyle = "#e8f4ff";
     ctx.lineWidth = 1;

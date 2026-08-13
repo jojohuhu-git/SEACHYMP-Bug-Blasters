@@ -42,7 +42,7 @@ Last generated: **2026-08-12** · Organisms: **22** · Level 3 cases: **16** · 
 |---|---|---|---|
 | **High-risk AmpC** | Enterobacter cloacae, Citrobacter freundii, Klebsiella aerogenes (bonus), Hafnia alvei, Yersinia enterocolitica | ✅ applied | |
 | **Low-risk AmpC** | Serratia marcescens, Aeromonas hydrophila, Morganella morganii, Providencia stuartii | | |
-| **Non-AmpC distractors** | E. coli, K. pneumoniae, K. oxytoca, C. koseri, P. mirabilis, P. penneri, E. faecalis, S. aureus, S. pneumoniae, E. faecium, Reef Clownfish, Coral, Friendly Clam | | |
+| **Non-AmpC distractors** | E. coli, K. pneumoniae, K. oxytoca, C. koseri, P. mirabilis, P. penneri, E. faecalis, S. aureus, S. pneumoniae, E. faecium, Dumbo Octopus, Coral, Friendly Clam | | |
 
 Arsenal (3 weapons): **Ceftriaxone**, **Cefepime**, **Carbapenems**.
 
@@ -231,8 +231,9 @@ when the bug is caught (capture card); **teaching point** = the clinical note. E
 
 ### Non-AmpC distractors — friendly reef life (Release / don't treat)
 
-**Reef Clownfish** (E. coli context) — `reef_clownfish` · art: dumbo-octopus ⚠ blurb/name say "clownfish"
-- Catch blurb: "A cheerful orange clownfish darting between sea anemones. Not a SEACHYMP target! Good stewardship = knowing when NOT to intervene." — ✎ Change:
+**Dumbo Octopus** (E. coli context) — `reef_clownfish` (id kept for save-compat) · art: dumbo-octopus
+- Renamed 2026-08-12 from "Reef Clownfish" — the art was always a dumbo octopus, not a clownfish; renamed to match the art rather than force in fish art that doesn't exist in the library (same fix pattern as `starfish`→"Coral" and `friendly_crab`→"Friendly Clam").
+- Catch blurb: "A round-eyed dumbo octopus, ear-like fins flared, drifting gently over the sand. Not a SEACHYMP target! Good stewardship = knowing when NOT to intervene." — ✎ Change:
 - Teaching: "Not an AmpC producer in this reef context. Leave it alone — good stewardship means NOT treating what doesn't need treating." — ✎ Change:
 
 **Coral** — `starfish` · art: christmas-tree-worm
@@ -275,12 +276,14 @@ when the bug is caught (capture card); **teaching point** = the clinical note. E
 - Catch blurb: "A round rosy anemone swaying gently on a rock. A gram-positive bystander — AmpC stewardship doesn't apply here at all." — ✎ Change:
 - Teaching: "Enterococcus faecalis is a gram-POSITIVE organism — AmpC has nothing to do with it. A pure distractor." — ✎ Change:
 
-**Staphylococcus aureus** — `saureus` · art: tiger-cowrie ⚠ blurb says "coral polyps"
-- Catch blurb: "A cluster of golden coral polyps catching the light. Gram-positive and entirely off your AmpC patrol list." — ✎ Change:
+**Staphylococcus aureus** — `saureus` · art: nomad-jellyfish
+- Swapped 2026-08-12 with Streptococcus pneumoniae's art (was tiger-cowrie, a shell — a much better fit for "S. pneumoniae... shells" below than for "coral polyps" here). Neither art option is a perfect match for "coral polyps"; this is a lateral move that fixed the other side.
+- Catch blurb: "A pale blue jellyfish drifting with a gently domed bell. Gram-positive and entirely off your AmpC patrol list." — ✎ Change:
 - Teaching: "Staphylococcus aureus is a gram-POSITIVE coccus in clusters — no AmpC involvement. A pure distractor." — ✎ Change:
 
-**Streptococcus pneumoniae** — `spneumoniae` · art: nomad-jellyfish ⚠ blurb says "shells"
-- Catch blurb: "A pair of violet shells nestled together on the sand. Gram-positive — nothing to do with the inducible-AmpC creatures you're after." — ✎ Change:
+**Streptococcus pneumoniae** — `spneumoniae` · art: tiger-cowrie
+- Swapped 2026-08-12 from nomad-jellyfish (a jellyfish, not a shell) to the actual shell art, matching this blurb's "shells" description.
+- Catch blurb: "A leopard-spotted cowrie shell resting alone on the sand. Gram-positive — nothing to do with the inducible-AmpC creatures you're after." — ✎ Change:
 - Teaching: "Streptococcus pneumoniae is a gram-POSITIVE diplococcus — no AmpC involvement. A pure distractor." — ✎ Change:
 
 **Enterococcus faecium** — `efaecium` · art: manta-ray ⚠ blurb says "anemone"
