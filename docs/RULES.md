@@ -13,7 +13,7 @@
 > **Change to / Notes** column). Hand the file back and I'll apply every edit in one pass
 > across all code surfaces, then rebuild, re-verify, and redeploy.
 
-Last generated: **2026-06-11** · Organisms: **22** · Level 3 cases: **16** · Source of truth: `src/`
+Last generated: **2026-08-12** · Organisms: **22** · Level 3 cases: **16** · Source of truth: `src/`
 
 ---
 
@@ -40,8 +40,8 @@ Last generated: **2026-06-11** · Organisms: **22** · Level 3 cases: **16** · 
 
 | Tier | Organisms | Approved? | Change to / Notes |
 |---|---|---|---|
-| **High-risk AmpC** | Enterobacter cloacae, Citrobacter freundii, Klebsiella aerogenes (bonus) | | |
-| **Low-risk AmpC** | Serratia marcescens, Aeromonas hydrophila, Hafnia alvei, Yersinia enterocolitica, Morganella morganii, Providencia stuartii | | |
+| **High-risk AmpC** | Enterobacter cloacae, Citrobacter freundii, Klebsiella aerogenes (bonus), Hafnia alvei, Yersinia enterocolitica | ✅ applied | |
+| **Low-risk AmpC** | Serratia marcescens, Aeromonas hydrophila, Morganella morganii, Providencia stuartii | | |
 | **Non-AmpC distractors** | E. coli, K. pneumoniae, K. oxytoca, C. koseri, P. mirabilis, P. penneri, E. faecalis, S. aureus, S. pneumoniae, E. faecium, Reef Clownfish, Coral, Friendly Clam | | |
 
 Arsenal (3 weapons): **Ceftriaxone**, **Cefepime**, **Carbapenems**.
@@ -101,11 +101,11 @@ are both accepted** (override of the case answer; Ceftriaxone ineffective).
 | L3-6 | Enterobacter | Catheter-associated UTI | Catheter removed | 5 days | Cefepime | | |
 | L3-7 | Citrobacter | Uncomplicated UTI | N/A | 3–5 days | Cefepime | | |
 | L3-8 | Aeromonas | Soft-tissue (freshwater) | Debridement done | 5–7 days | Ceftriaxone | | |
-| L3-9 | Hafnia | Uncomplicated UTI | N/A | 3–5 days | Ceftriaxone | | |
-| L3-10 | Hafnia | Intra-abdominal abscess | Abscess drained | 4 days | Ceftriaxone | | |
+| L3-9 | Hafnia | Uncomplicated UTI | N/A | 3–5 days | Cefepime | ✅ applied | |
+| L3-10 | Hafnia | Intra-abdominal abscess | Abscess drained | 4 days | Cefepime | ✅ applied | |
 | L3-11 | Morganella | Surgical wound | Debridement performed | 5–7 days | Ceftriaxone | | |
-| L3-12 | Morganella | Complicated UTI (stent) | Stent placed | 7 days | Ceftriaxone | | |
-| L3-13 | Providencia | Catheter-associated UTI | Catheter changed | 5–7 days | Ceftriaxone | | |
+| L3-12 | Morganella | Complicated UTI (stent) | Stent placed | 5 days | Ceftriaxone | ✅ applied | |
+| L3-13 | Providencia | Catheter-associated UTI | Catheter changed | 5 days | Ceftriaxone | | |
 | L3-14 | Providencia | Bacteremia (urinary) | Catheter removed | 7 days | Ceftriaxone | | |
 | L3-15 | K. aerogenes | Bacteremia (biliary, ERCP) | Biliary drainage | 7 days | Cefepime | | |
 | L3-16 | K. aerogenes | Ventilator-assoc pneumonia | N/A | 7 days | Cefepime | | |
@@ -120,10 +120,10 @@ are both accepted** (override of the case answer; Ceftriaxone ineffective).
 - **L3-6** "Even for a short UTI course, Enterobacter's high-risk AmpC profile warrants Cefepime over Ceftriaxone to avoid selecting for resistance." ✎ Change:
 - **L3-7** "Citrobacter freundii is HIGH-risk AmpC — Cefepime is the safer choice even for shorter courses to avoid selecting for AmpC de-repression." ✎ Change:
 - **L3-8** "Aeromonas is low-risk AmpC; for a soft-tissue infection with adequate debridement, Ceftriaxone is appropriate — escalate to Cefepime only for serious high-inoculum infections." ✎ Change:
-- **L3-9** "Hafnia is low-risk AmpC; Ceftriaxone is appropriate for a straightforward UTI — the organism alone does not demand escalation." ✎ Change:
-- **L3-10** "Low-risk AmpC intra-abdominal abscess with source control achieved (drained) — with adequate drainage, a focused 4-day Ceftriaxone course is appropriate; source control is the key driver here." ✎ Change:
+- **L3-9** "Hafnia is high-risk AmpC; even for a straightforward UTI, Cefepime is preferred over Ceftriaxone to avoid selecting for AmpC de-repression." ✎ Change:
+- **L3-10** "High-risk AmpC intra-abdominal abscess — even with source control achieved (drained), Cefepime is preferred over Ceftriaxone to avoid selecting for AmpC de-repression." ✎ Change:
 - **L3-11** "Morganella morganii is low induction risk; with adequate debridement, a 5–7-day Ceftriaxone course is clinically appropriate." ✎ Change:
-- **L3-12** "Low-risk AmpC UTI with source control achieved — a 7-day Ceftriaxone course is adequate; re-evaluate if clinical deterioration occurs." ✎ Change:
+- **L3-12** "Low-risk AmpC UTI with source control achieved — a 5-day Ceftriaxone course is adequate; re-evaluate if clinical deterioration occurs." ✎ Change:
 - **L3-13** "Providencia is low-risk AmpC; a 5–7-day Ceftriaxone course following catheter exchange is appropriate for uncomplicated catheter-associated UTI." ✎ Change:
 - **L3-14** "Low-risk AmpC bacteremia with source control — a 7-day Ceftriaxone course is appropriate for urinary-source bacteremia; no indication for routine Cefepime escalation." ✎ Change:
 - **L3-15** "Klebsiella aerogenes shares the high-risk AmpC profile of Enterobacter — Cefepime is preferred for bacteremia even after source control." ✎ Change:
@@ -153,10 +153,10 @@ Edit on the **✎ Change:** line.
 - **Mutated + Ceftriaxone** → "Ineffective against mutated form." / "This organism has adapted — ceftriaxone is no longer effective. Switch to Cefepime or a carbapenem." ✎ Change:
 - **Mutated + Cefepime _or_ Carbapenem** → "Correct — effective against the mutated form." / "{name} has de-repressed its AmpC. Cefepime and a carbapenem are both appropriate now — Ceftriaxone is no longer effective." ✎ Change:
 - **High-risk + Cefepime** → "Correct — preferred choice." / "{name} is a high-risk AmpC producer. Cefepime is the preferred agent — it is stable against AmpC de-repression." ✎ Change:
-- **High-risk + Ceftriaxone** → "Risk of clinical failure." / "{name} is a high-risk AmpC producer. Ceftriaxone risks AmpC de-repression and clinical failure in serious infections. Prefer Cefepime." ✎ Change:
+- **High-risk + Ceftriaxone** → "Risk of clinical failure." / "{name} is a high-risk AmpC producer. Ceftriaxone risks AmpC de-repression and clinical failure in serious infections. Prefer Cefepime. (In practice, short courses for mild, uncomplicated infections are sometimes considered acceptable — but this app teaches the conservative default.)" ✎ Change:
 - **High-risk + Carbapenem** → "Acceptable — but reserve it." / "Carbapenems work against high-risk AmpC organisms, but Cefepime is preferred first-line for {name}. Reserve carbapenems for mutated AmpC organisms that are resistant to Cefepime, and for ESBL producers." ✎ Change:
 - **Low-risk + Ceftriaxone** → "Correct — good stewardship." / "{name} is low-risk AmpC. Ceftriaxone is an appropriate, narrow choice for most serious infections with this organism." ✎ Change:
-- **Low-risk + Cefepime** → "Effective, but broader than needed." / "{name} is low-risk AmpC. Cefepime works, but Ceftriaxone is often sufficient here. Good stewardship means narrowing when you can." ✎ Change:
+- **Low-risk + Cefepime** → "Effective, but broader than needed." / "{name} is low-risk AmpC. Cefepime works, but Ceftriaxone is often sufficient here. Good stewardship means narrowing when you can." ✎ Change: Effective, but broader than needed." / "{name} is low-risk AmpC. Cefepime is preferred for prolonged courses or deep seated infections, but Ceftriaxone is often sufficient here. Good stewardship means narrowing when you can
 - **Low-risk + Carbapenem** → "Works, but reserve it." / "Carbapenems are effective here, but they should be reserved for mutated AmpC organisms resistant to Cefepime and for ESBL producers. Ceftriaxone or Cefepime is preferred for this low-risk organism." ✎ Change:
 
 ---
@@ -193,15 +193,23 @@ when the bug is caught (capture card); **teaching point** = the clinical note. E
 
 **Enterobacter cloacae** — `enterobacter` · art: spiky-pufferfish
 - Catch blurb: "A deep-sea puffer beast armored in heavy plates, glowing eyes radiating defiance. Clinically: among the most clinically important AmpC producers — Cefepime preferred for serious infections." — ✎ Change:
-- Teaching: "Enterobacter cloacae is HIGH-risk AmpC. De-repression risk is significant. Cefepime (or a carbapenem) is preferred over 3rd-gen cephalosporins for serious infections." — ✎ Change:
+- Teaching: "Enterobacter cloacae is HIGH-risk AmpC. De-repression risk is significant. Cefepime (or a carbapenem) is preferred over 3rd-gen cephalosporins for serious infections — though short courses for mild, uncomplicated infections may reasonably use Ceftriaxone in some cases." — ✎ Change:
 
 **Citrobacter freundii** — `citrobacter` · art: coconut-crab
 - Catch blurb: "Massive claws, impenetrable shell — this armored crab tank will not yield easily. Clinically: one of the classic high-risk AmpC producers; Cefepime strongly preferred for serious infections." — ✎ Change:
-- Teaching: "Citrobacter freundii is HIGH-risk AmpC. Like Enterobacter, de-repression is a real clinical concern. Prefer Cefepime for serious infections." — ✎ Change:
+- Teaching: "Citrobacter freundii is HIGH-risk AmpC. Like Enterobacter, de-repression is a real clinical concern. Prefer Cefepime for serious infections — though short courses for mild, uncomplicated infections may reasonably use Ceftriaxone in some cases." — ✎ Change:
 
 **Klebsiella aerogenes** (bonus) — `klebsiella_aerogenes` · art: lionfish
 - Catch blurb: "An orange spiked lionfish — beautiful but aggressive, with venom to match. Clinically: reclassified from Enterobacter; shares the high-risk AmpC profile; Cefepime strongly preferred." — ✎ Change:
-- Teaching: "Klebsiella aerogenes (formerly Enterobacter aerogenes) is HIGH-risk AmpC. Cefepime preferred over 3rd-gen cephalosporins for serious infections. Bonus organism — not part of the classic SEACHYMP mnemonic." — ✎ Change:
+- Teaching: "Klebsiella aerogenes (formerly Enterobacter aerogenes) is HIGH-risk AmpC. Cefepime preferred over 3rd-gen cephalosporins for serious infections — though short courses for mild, uncomplicated infections may reasonably use Ceftriaxone in some cases. Bonus organism — not part of the classic SEACHYMP mnemonic." — ✎ Change:
+
+**Hafnia alvei** — `hafnia` · art: cowfish ⚠ blurb says "blobfish"
+- Catch blurb: "A purple blobfish with a perpetually sad face — ugly-cute and mostly harmless. Clinically: infrequent pathogen, but AmpC induction risk is variable enough to warrant Cefepime for serious infections." — ✎ Change:
+- Teaching: "Hafnia alvei is a HIGH-risk AmpC producer with variable induction risk. Cefepime is preferred over 3rd-gen cephalosporins for serious infections — though short courses for mild, uncomplicated infections may reasonably use Ceftriaxone in some cases." — ✎ Change:
+
+**Yersinia enterocolitica** — `yersinia` · art: hermit-crab
+- Catch blurb: "A tiny blue hermit crab, curious and quick, scuttling between coral. Clinically: most invasive Yersinia infections are self-limited, but AmpC induction risk is high enough to prefer Cefepime when treatment is needed." — ✎ Change:
+- Teaching: "Yersinia enterocolitica is a HIGH-risk AmpC producer. Most invasive infections are self-limited, but when treatment is indicated, Cefepime is preferred over 3rd-gen cephalosporins — though short courses for mild, uncomplicated infections may reasonably use Ceftriaxone in some cases." — ✎ Change:
 
 ### SEACHYMP — low-risk AmpC
 
@@ -212,14 +220,6 @@ when the bug is caught (capture card); **teaching point** = the clinical note. E
 **Aeromonas hydrophila** — `aeromonas` · art: blue-dragon-nudibranch
 - Catch blurb: "A squishy sea-slug with a leech mouth — surprisingly docile until cornered. Clinically: a waterborne gram-negative with low-risk AmpC; Ceftriaxone usually works well." — ✎ Change:
 - Teaching: "Aeromonas has inducible AmpC but is generally low-risk for de-repression. Ceftriaxone is appropriate for most infections; escalate to Cefepime for serious or high-inoculum cases." — ✎ Change:
-
-**Hafnia alvei** — `hafnia` · art: cowfish ⚠ blurb says "blobfish"
-- Catch blurb: "A purple blobfish with a perpetually sad face — ugly-cute and mostly harmless. Clinically: infrequent pathogen, low AmpC induction risk; Ceftriaxone often sufficient." — ✎ Change:
-- Teaching: "Hafnia alvei is a low-risk AmpC producer. Ceftriaxone is typically acceptable; clinical data for induction is limited." — ✎ Change:
-
-**Yersinia enterocolitica** — `yersinia` · art: hermit-crab
-- Catch blurb: "A tiny blue hermit crab, curious and quick, scuttling between coral. Clinically: low induction risk; most invasive Yersinia infections are self-limited — use Ceftriaxone or Cefepime when treatment is needed." — ✎ Change:
-- Teaching: "Yersinia enterocolitica produces AmpC but is generally low-risk for de-repression. Most infections are self-limited; when treatment is indicated, Ceftriaxone or Cefepime are appropriate." — ✎ Change:
 
 **Morganella morganii** — `morganella` · art: moray-eel
 - Catch blurb: "A sneaky moray eel that peers from rocky crevices with narrow, calculating eyes. Clinically: intrinsic resistance to ampicillin; AmpC induction risk is modest; Ceftriaxone usually adequate." — ✎ Change:

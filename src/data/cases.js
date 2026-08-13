@@ -5,8 +5,9 @@
  * rationale should be one concise sentence (teaching point).
  *
  * Teaching pattern:
- *   High-risk AmpC (Enterobacter, Citrobacter, K. aerogenes) → cefepime for any serious infection.
- *   Low-risk AmpC (Serratia, Aeromonas, Hafnia, Yersinia, Morganella, Providencia) →
+ *   High-risk AmpC (Enterobacter, Citrobacter, K. aerogenes, Hafnia, Yersinia) →
+ *     cefepime for any serious infection.
+ *   Low-risk AmpC (Serratia, Aeromonas, Morganella, Providencia) →
  *     ceftriaxone often acceptable for routine infection, but cefepime for
  *     endovascular, prolonged, or high-inoculum infections.
  *   Carbapenems reserved for mutated AmpC organisms resistant to Cefepime, and for ESBL producers.
@@ -106,7 +107,7 @@ export const CASES = [
       "Aeromonas is low-risk AmpC; for a soft-tissue infection with adequate debridement, Ceftriaxone is appropriate — escalate to Cefepime only for serious high-inoculum infections.",
   },
 
-  // ── Hafnia (low-risk AmpC) ────────────────────────────────────────────────
+  // ── Hafnia (high-risk AmpC) ───────────────────────────────────────────────
 
   {
     id: "case_hafnia_uti",
@@ -114,9 +115,9 @@ export const CASES = [
     infection: "Uncomplicated UTI",
     sourceControl: "N/A",
     duration: "3–5 days",
-    correctDecision: "ceftriaxone",
+    correctDecision: "cefepime",
     rationale:
-      "Hafnia is low-risk AmpC; Ceftriaxone is appropriate for a straightforward UTI — the organism alone does not demand escalation.",
+      "Hafnia is high-risk AmpC; even for a straightforward UTI, Cefepime is preferred over Ceftriaxone to avoid selecting for AmpC de-repression.",
   },
   {
     id: "case_hafnia_bacteremia",
@@ -124,9 +125,9 @@ export const CASES = [
     infection: "Intra-abdominal abscess (Hafnia)",
     sourceControl: "Abscess drained",
     duration: "4 days",
-    correctDecision: "ceftriaxone",
+    correctDecision: "cefepime",
     rationale:
-      "Low-risk AmpC intra-abdominal abscess with source control achieved (drained) — with adequate drainage, a focused 4-day Ceftriaxone course is appropriate; source control is the key driver here.",
+      "High-risk AmpC intra-abdominal abscess — even with source control achieved (drained), Cefepime is preferred over Ceftriaxone to avoid selecting for AmpC de-repression.",
   },
 
   // ── Morganella (low-risk AmpC) ────────────────────────────────────────────
@@ -146,10 +147,10 @@ export const CASES = [
     organismId: "morganella",
     infection: "Complicated UTI (obstructive uropathy, stent placed)",
     sourceControl: "Stent placed",
-    duration: "7 days",
+    duration: "5 days",
     correctDecision: "ceftriaxone",
     rationale:
-      "Low-risk AmpC UTI with source control achieved — a 7-day Ceftriaxone course is adequate; re-evaluate if clinical deterioration occurs.",
+      "Low-risk AmpC UTI with source control achieved — a 5-day Ceftriaxone course is adequate; re-evaluate if clinical deterioration occurs.",
   },
 
   // ── Providencia (low-risk AmpC) ──────────────────────────────────────────

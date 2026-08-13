@@ -63,7 +63,7 @@ export const ORGANISMS = [
     emoji: "🐡",
     difficulty: "hard",
     teachingPoint:
-      "Enterobacter cloacae is HIGH-risk AmpC. De-repression risk is significant. Cefepime (or a carbapenem) is preferred over 3rd-gen cephalosporins for serious infections.",
+      "Enterobacter cloacae is HIGH-risk AmpC. De-repression risk is significant. Cefepime (or a carbapenem) is preferred over 3rd-gen cephalosporins for serious infections — though short courses for mild, uncomplicated infections may reasonably use Ceftriaxone in some cases.",
     blurb:
       "A deep-sea puffer beast armored in heavy plates, glowing eyes radiating defiance. Clinically: among the most clinically important AmpC producers — Cefepime preferred for serious infections.",
   },
@@ -97,7 +97,7 @@ export const ORGANISMS = [
     emoji: "🦀",
     difficulty: "hard",
     teachingPoint:
-      "Citrobacter freundii is HIGH-risk AmpC. Like Enterobacter, de-repression is a real clinical concern. Prefer Cefepime for serious infections.",
+      "Citrobacter freundii is HIGH-risk AmpC. Like Enterobacter, de-repression is a real clinical concern. Prefer Cefepime for serious infections — though short courses for mild, uncomplicated infections may reasonably use Ceftriaxone in some cases.",
     blurb:
       "Massive claws, impenetrable shell — this armored crab tank will not yield easily. Clinically: one of the classic high-risk AmpC producers; Cefepime strongly preferred for serious infections.",
   },
@@ -108,15 +108,15 @@ export const ORGANISMS = [
     species: "Hafnia alvei",
     isSeachymp: true,
     bonus: false,
-    riskTier: "low",
+    riskTier: "high",
     artToken: "cowfish",
     color: "#9370db",
     emoji: "🐟",
     difficulty: "easy",
     teachingPoint:
-      "Hafnia alvei is a low-risk AmpC producer. Ceftriaxone is typically acceptable; clinical data for induction is limited.",
+      "Hafnia alvei is a HIGH-risk AmpC producer with variable induction risk. Cefepime is preferred over 3rd-gen cephalosporins for serious infections — though short courses for mild, uncomplicated infections may reasonably use Ceftriaxone in some cases.",
     blurb:
-      "A purple blobfish with a perpetually sad face — ugly-cute and mostly harmless. Clinically: infrequent pathogen, low AmpC induction risk; Ceftriaxone often sufficient.",
+      "A purple blobfish with a perpetually sad face — ugly-cute and mostly harmless. Clinically: infrequent pathogen, but AmpC induction risk is variable enough to warrant Cefepime for serious infections.",
   },
 
   {
@@ -125,15 +125,15 @@ export const ORGANISMS = [
     species: "Yersinia enterocolitica",
     isSeachymp: true,
     bonus: false,
-    riskTier: "low",
+    riskTier: "high",
     artToken: "hermit-crab",
     color: "#4a90d9",
     emoji: "🦀",
     difficulty: "easy",
     teachingPoint:
-      "Yersinia enterocolitica produces AmpC but is generally low-risk for de-repression. Most infections are self-limited; when treatment is indicated, Ceftriaxone or Cefepime are appropriate.",
+      "Yersinia enterocolitica is a HIGH-risk AmpC producer. Most invasive infections are self-limited, but when treatment is indicated, Cefepime is preferred over 3rd-gen cephalosporins — though short courses for mild, uncomplicated infections may reasonably use Ceftriaxone in some cases.",
     blurb:
-      "A tiny blue hermit crab, curious and quick, scuttling between coral. Clinically: low induction risk; most invasive Yersinia infections are self-limited — use Ceftriaxone or Cefepime when treatment is needed.",
+      "A tiny blue hermit crab, curious and quick, scuttling between coral. Clinically: most invasive Yersinia infections are self-limited, but AmpC induction risk is high enough to prefer Cefepime when treatment is needed.",
   },
 
   {
@@ -184,7 +184,7 @@ export const ORGANISMS = [
     emoji: "🦁",
     difficulty: "hard",
     teachingPoint:
-      "Klebsiella aerogenes (formerly Enterobacter aerogenes) is HIGH-risk AmpC. Cefepime preferred over 3rd-gen cephalosporins for serious infections. Bonus organism — not part of the classic SEACHYMP mnemonic.",
+      "Klebsiella aerogenes (formerly Enterobacter aerogenes) is HIGH-risk AmpC. Cefepime preferred over 3rd-gen cephalosporins for serious infections — though short courses for mild, uncomplicated infections may reasonably use Ceftriaxone in some cases. Bonus organism — not part of the classic SEACHYMP mnemonic.",
     blurb:
       "An orange spiked lionfish — beautiful but aggressive, with venom to match. Clinically: reclassified from Enterobacter; shares the high-risk AmpC profile; Cefepime strongly preferred.",
   },

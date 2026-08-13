@@ -112,7 +112,7 @@ export function classifyChoice(org, weaponId, mutated) {
         heading: "Risk of clinical failure.",
         feedback:
           org.name +
-          " is a high-risk AmpC producer. Ceftriaxone risks AmpC de-repression and clinical failure in serious infections. Prefer Cefepime.",
+          " is a high-risk AmpC producer. Ceftriaxone risks AmpC de-repression and clinical failure in serious infections. Prefer Cefepime. (In practice, short courses for mild, uncomplicated infections are sometimes considered acceptable — but this app teaches the conservative default.)",
         isCorrect: false,
       };
     }
