@@ -133,15 +133,77 @@ export function drawCreatureSprite(ctx, org, x, y, radius, mutated, opts = {}) {
 }
 
 /**
+ * KILL_PALETTE — the colours a kill burst is built from. Ordered hot-to-cool so
+ * slices of it read as a coherent fireball rather than a random rainbow: the
+ * first entries drive the core and fireball, the later ones the debris, embers
+ * and outer rings.
+ */
+export const KILL_PALETTE = [
+  "#fffbe6", // near-white core
+  "#ffe066", // yellow
+  "#ffa733", // orange
+  "#ff5d5d", // red
+  "#ff5ec4", // magenta
+  "#8b5cf6", // violet
+  "#3ab7ff", // cyan
+  "#3ce6b0", // aqua-green
+];
+
+/**
+ * WEAPON_KILL_PALETTES — the blast takes the colour of the antibiotic that
+ * fired it, so which drug you chose is readable at a glance from the explosion
+ * alone. Each is ordered the same way as KILL_PALETTE (core first, outer last).
+ * Keyed by weapon id from src/data/weapons.js.
+ */
+export const WEAPON_KILL_PALETTES = {
+  // Blue Bubble Cannon — a foaming burst of seawater and bubbles.
+  ceftriaxone: [
+    "#ffffff", "#dff1ff", "#8ed8ff", "#38a8f0",
+    "#2f6bb0", "#7ff0dd", "#bfe9ff", "#5aa3ec",
+  ],
+  // Purple Electric Harpoon — a violet discharge shot through with magenta.
+  cefepime: [
+    "#ffffff", "#efe0ff", "#c4a2ff", "#a855f7",
+    "#7c3aed", "#ff5ec4", "#e9d5ff", "#8b5cf6",
+  ],
+  // Golden Anchor Launcher — a heavy, molten gold concussion.
+  carbapenem: [
+    "#fffbe6", "#ffe9a8", "#ffc94d", "#f59e0b",
+    "#d97706", "#ff8c42", "#ffd166", "#c9840f",
+  ],
+};
+
+/**
+ * A stable 0–1 seed per organism instance, so two creatures exploding at once
+ * don't throw identical debris, while a single explosion stays steady frame to
+ * frame (no Math.random per frame — that makes particles jitter).
+ */
+function killSeed(org) {
+  if (org._killSeed == null) {
+    const s = String(org.id_instance || org.id || "");
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 997;
+    org._killSeed = h / 997;
+  }
+  return org._killSeed;
+}
+
+/**
  * drawKillExplosion — sprite-based kill burst driven by org.fadeProgress (0→1).
- * The creature flashes white and scales up while fading, throwing colored debris
- * shards and rising bubbles, with an expanding white burst ring. Reduced-motion
- * keeps just the scale-down fade.
  *
+ * Built in layers, back to front: a soft coloured glow, the creature itself
+ * flashing white and scaling up as it fades, three expanding shockwave rings in
+ * different colours, radial light spikes, tumbling debris shards, fast sparks,
+ * slow drifting embers, and rising bubbles. Reduced-motion keeps just a calm
+ * shrink-and-fade with none of it.
+ *
+ * @param {object} [opts]
+ *   palette — colours to build the burst from (defaults to KILL_PALETTE); the
+ *     weapon-specific bursts pass their own.
  * @returns {boolean} true if drawn (sprite ready), false to fall back to the
  *   legacy circle shrink in drawOrganismEffects.
  */
-export function drawKillExplosion(ctx, org, x, y, radius) {
+export function drawKillExplosion(ctx, org, x, y, radius, opts = {}) {
   const entry = getSprite(org.artToken);
   if (!entry || !entry.loaded) return false;
 
@@ -153,90 +215,198 @@ export function drawKillExplosion(ctx, org, x, y, radius) {
     return true;
   }
 
-  // Growing, fading sprite with an early white flash.
+  // Colour the blast for the weapon that fired it (set on the organism when the
+  // shot lands); fall back to the generic palette for kills with no weapon.
+  const pal =
+    (opts.palette && opts.palette.length && opts.palette) ||
+    WEAPON_KILL_PALETTES[org.killWeaponId] ||
+    KILL_PALETTE;
+  const hue = (i) => pal[i % pal.length];
+  const seed = killSeed(org);
+  const spin = seed * Math.PI * 2;
+
+  // ── Soft fireball glow behind everything ────────────────────────────────
+  // Two stacked radial gradients (hot core, cooler halo) give the burst mass,
+  // so it reads as an explosion rather than a ring of loose particles.
+  if (p < 0.7) {
+    const gp = 1 - p / 0.7;
+    // Tight and hot: a concentrated core that burns down fast. A wide, faint
+    // gradient here just reads as a milky bubble over the ocean, not a blast.
+    const R = radius * (0.7 + p * 2.0);
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    const g = ctx.createRadialGradient(x, y, 0, x, y, R);
+    g.addColorStop(0, hue(0));
+    g.addColorStop(0.35, hue(1));
+    g.addColorStop(0.7, hue(2));
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.globalAlpha = gp * gp * 0.95;
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, R, 0, Math.PI * 2);
+    ctx.fill();
+
+    // A soft warm bloom just outside the core — enough to give the blast some
+    // mass without hazing over the whole area.
+    const R2 = radius * (1 + p * 3.4);
+    const g2 = ctx.createRadialGradient(x, y, R2 * 0.4, x, y, R2);
+    g2.addColorStop(0, "rgba(0,0,0,0)");
+    g2.addColorStop(0.6, hue(3));
+    g2.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.globalAlpha = gp * 0.28;
+    ctx.fillStyle = g2;
+    ctx.beginPath();
+    ctx.arc(x, y, R2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ── The creature: flashes white, swells, fades out ──────────────────────
   const flash = p < 0.45 ? 0.95 * (1 - p / 0.45) : 0;
   drawCreatureSprite(ctx, org, x, y, radius, false, {
-    scale: 1 + p * 0.85,
+    scale: 1 + p * 1.1,
     alpha: Math.max(0, 1 - p * 1.05),
     tintColor: "#ffffff",
     tintAlpha: flash,
   });
 
-  const col = org.color || "#94a3b8";
-
-  // Expanding white burst ring, trailed by a slower colored ring (escalation).
-  if (p < 0.65) {
-    ctx.save();
-    ctx.globalAlpha = (1 - p / 0.65) * 0.7;
-    ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(x, y, radius * (1 + p * 3.2), 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-  }
-  if (p > 0.1 && p < 0.85) {
-    const rp = (p - 0.1) / 0.75;
-    ctx.save();
-    ctx.globalAlpha = (1 - rp) * 0.5;
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(x, y, radius * (1 + rp * 2.4), 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  // Debris shards flung outward (organism color), gravity-tugged downward.
-  const N = 16;
-  ctx.save();
-  for (let i = 0; i < N; i++) {
-    const ang = (i / N) * Math.PI * 2 + (i % 2 ? 0.3 : 0);
-    const dist = p * radius * 3.4;
-    const px = x + Math.cos(ang) * dist;
-    const py = y + Math.sin(ang) * dist + p * p * radius * 1.1; // slight fall
-    ctx.globalAlpha = (1 - p) * 0.9;
-    ctx.fillStyle = col;
-    const sz = (1 - p) * 3.6 + 1;
-    ctx.fillRect(px - sz / 2, py - sz / 2, sz, sz);
-  }
-  ctx.restore();
-
-  // Sparks — thin bright streaks flung outward faster than the shards, gone
-  // early (a second, quicker particle type for visual variety).
+  // ── Hot core drawn OVER the creature ────────────────────────────────────
+  // The glow behind it is hidden by the sprite while the sprite is still
+  // opaque, so the creature has to burn from the inside out as well.
   if (p < 0.5) {
-    const SP = 8;
+    const cp = 1 - p / 0.5;
+    const R = radius * (0.45 + p * 1.3);
     ctx.save();
-    ctx.strokeStyle = "#fff7cc";
-    ctx.lineWidth = 1.4;
+    ctx.globalCompositeOperation = "lighter";
+    const g = ctx.createRadialGradient(x, y, 0, x, y, R);
+    g.addColorStop(0, hue(0));
+    g.addColorStop(0.45, hue(1));
+    g.addColorStop(0.8, hue(2));
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.globalAlpha = cp * 0.95;
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, R, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ── Radial light spikes — a hard, fast starburst at the moment of impact ─
+  if (p < 0.3) {
+    const sp = 1 - p / 0.3;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = hue(0);
     ctx.lineCap = "round";
-    for (let i = 0; i < SP; i++) {
-      const ang = (i / SP) * Math.PI * 2 + 0.5;
-      const dist = p * radius * 4.2;
-      const px = x + Math.cos(ang) * dist;
-      const py = y + Math.sin(ang) * dist;
-      const tailX = x + Math.cos(ang) * dist * 0.7;
-      const tailY = y + Math.sin(ang) * dist * 0.7;
-      ctx.globalAlpha = (1 - p / 0.5) * 0.9;
+    for (let i = 0; i < 12; i++) {
+      const a = spin + (i / 12) * Math.PI * 2;
+      const inner = radius * 0.5;
+      const outer = radius * (1 + p * 7) * (i % 2 ? 0.65 : 1);
+      ctx.globalAlpha = sp * 0.8;
+      ctx.lineWidth = (i % 2 ? 1.5 : 3) * sp;
       ctx.beginPath();
-      ctx.moveTo(tailX, tailY);
-      ctx.lineTo(px, py);
+      ctx.moveTo(x + Math.cos(a) * inner, y + Math.sin(a) * inner);
+      ctx.lineTo(x + Math.cos(a) * outer, y + Math.sin(a) * outer);
       ctx.stroke();
     }
     ctx.restore();
   }
 
-  // Rising bubbles (treatment "cleared" cue).
+  // ── Three shockwave rings, each a different colour and speed ────────────
+  const RINGS = [
+    { start: 0.0, span: 0.55, reach: 5.5, width: 7, col: hue(0), alpha: 0.9 },
+    { start: 0.08, span: 0.7, reach: 4.2, width: 5, col: hue(3), alpha: 0.75 },
+    { start: 0.18, span: 0.85, reach: 3.0, width: 3.5, col: hue(6), alpha: 0.6 },
+  ];
   ctx.save();
-  for (let i = 0; i < 9; i++) {
-    const phase = Math.min(1, p + i * 0.03);
-    const bx = x + Math.sin(i * 2.1) * radius * 0.9;
-    const by = y - phase * radius * 2.9;
-    ctx.globalAlpha = (1 - phase) * 0.5;
+  ctx.globalCompositeOperation = "lighter";
+  for (const r of RINGS) {
+    if (p < r.start || p > r.start + r.span) continue;
+    const rp = (p - r.start) / r.span;
+    ctx.globalAlpha = (1 - rp) * r.alpha;
+    ctx.strokeStyle = r.col;
+    ctx.lineWidth = r.width * (1 - rp * 0.7);
+    ctx.beginPath();
+    ctx.arc(x, y, radius * (1 + rp * r.reach), 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // ── Debris: tumbling coloured shards, flung out and pulled down ─────────
+  // Shards are stretched along their own direction of travel (with a little
+  // tumble on top) so they read as fragments being thrown outward. Square
+  // pieces at this size just look like confetti.
+  const N = 30;
+  ctx.save();
+  for (let i = 0; i < N; i++) {
+    const a = spin + (i / N) * Math.PI * 2 + Math.sin(i * 3.7) * 0.25;
+    const speed = 0.6 + ((i * 7) % 10) / 10 * 0.8; // varied throw distance
+    const dist = p * radius * 6 * speed;
+    const px = x + Math.cos(a) * dist;
+    const py = y + Math.sin(a) * dist + p * p * radius * 2.2; // gravity
+    ctx.globalAlpha = Math.max(0, 1 - p * 1.15);
+    // Mostly hot colours plus the creature's own, with an occasional cool
+    // accent — a full even spread of the palette looks like party confetti.
+    ctx.fillStyle =
+      i % 4 === 0 ? (org.color || hue(3)) :
+      i % 7 === 0 ? hue(6) :
+      hue(1 + (i % 3));
+    const sz = (1 - p) * 6 + 1.4;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(a + Math.sin(i + p * 7) * 0.5); // aligned to travel, slight tumble
+    ctx.fillRect(-sz * 0.9, -sz * 0.28, sz * 1.8, sz * 0.56);
+    ctx.restore();
+  }
+  ctx.restore();
+
+  // ── Sparks: thin bright streaks, faster than the debris and gone early ──
+  if (p < 0.5) {
+    const SP = 18;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.lineCap = "round";
+    for (let i = 0; i < SP; i++) {
+      const a = spin * 1.7 + (i / SP) * Math.PI * 2;
+      const dist = p * radius * 7.5 * (0.7 + ((i * 3) % 7) / 7 * 0.6);
+      ctx.globalAlpha = (1 - p / 0.5) * 0.9;
+      ctx.strokeStyle = hue(i + 1);
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(a) * dist * 0.62, y + Math.sin(a) * dist * 0.62);
+      ctx.lineTo(x + Math.cos(a) * dist, y + Math.sin(a) * dist);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // ── Embers: slow glowing motes that drift up and linger after the bang ──
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  for (let i = 0; i < 14; i++) {
+    const a = spin + i * 2.399; // golden-angle spread, no clumping
+    const dist = radius * (0.5 + p * 2.6) * (0.5 + ((i * 5) % 9) / 9);
+    const ex = x + Math.cos(a) * dist + Math.sin(p * 6 + i) * 3;
+    const ey = y + Math.sin(a) * dist - p * radius * 1.6;
+    ctx.globalAlpha = Math.max(0, 1 - p) * 0.75;
+    ctx.fillStyle = hue(i + 2);
+    ctx.beginPath();
+    ctx.arc(ex, ey, 1 + (1 - p) * 2.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // ── Rising bubbles (the "cleared" cue that keeps it underwater) ─────────
+  ctx.save();
+  for (let i = 0; i < 16; i++) {
+    const phase = Math.min(1, p + i * 0.02);
+    const bx = x + Math.sin(i * 2.1 + spin) * radius * 1.4;
+    const by = y - phase * radius * 3.6;
+    ctx.globalAlpha = (1 - phase) * 0.55;
     ctx.strokeStyle = "#e8f4ff";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(bx, by, 1.5 + (1 - phase) * 2, 0, Math.PI * 2);
+    ctx.arc(bx, by, 1.5 + (1 - phase) * 2.6, 0, Math.PI * 2);
     ctx.stroke();
   }
   ctx.restore();

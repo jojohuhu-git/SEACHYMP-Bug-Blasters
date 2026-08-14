@@ -1,3 +1,5 @@
+import { prefersReducedMotion } from "./organismSprites.js";
+
 /**
  * reefRenderer.js — Canvas painter for the growing seabed reef.
  *
@@ -13,7 +15,16 @@
  *
  * `stageIdx` is the index into REEF_STAGES (0 barren … 3 thriving).
  *
- * drawReef(ctx, w, h, stageIdx, tick)
+ * drawReef(ctx, w, h, stageIdx, tick, bloomState)
+ *
+ * When the reef advances a stage, call triggerReefBloom(state) (state being a
+ * scene's stateRef.current — any object with a `tick`) and pass state.reefBloom
+ * back into drawReef each frame; it fades out on its own and callers should
+ * null the field once isReefBloomDone(state) is true. Like every other
+ * animated flourish here, the bloom is fully skipped under
+ * prefersReducedMotion() (mirrors screenEffects.js's shake/flash skip) — the
+ * reef itself still advances instantly via STAGE[stageIdx], just without the
+ * brightening wash, sparkles, or darting fish.
  */
 
 // Deterministic pseudo-random in [0,1) from a numeric seed — keeps every clump
@@ -621,7 +632,88 @@ function drawRay(ctx, x, y, sz, dir, tick, seed) {
 
 // ── Main painter ──────────────────────────────────────────────────────────────
 
-export function drawReef(ctx, w, h, stageIdx, tick) {
+// ── Reef bloom (stage-advance payoff) ─────────────────────────────────────────
+
+export const REEF_BLOOM_FRAMES = 110; // ~1.8s at 60fps
+
+/** Start the bloom flourish. Call when a scene's reefStageIdx increases. */
+export function triggerReefBloom(state) {
+  if (!state || prefersReducedMotion()) return;
+  state.reefBloom = { startTick: state.tick };
+}
+
+/** True once a scene's state.reefBloom has finished and can be cleared. */
+export function isReefBloomDone(state) {
+  const b = state?.reefBloom;
+  return !b || state.tick - b.startTick >= REEF_BLOOM_FRAMES;
+}
+
+function drawReefBloom(ctx, w, h, tick, bloom, baseY, bandH) {
+  if (!bloom || prefersReducedMotion()) return;
+  const e = tick - bloom.startTick;
+  const t = Math.max(0, Math.min(1, e / REEF_BLOOM_FRAMES));
+  if (t >= 1) return;
+  // Rise-then-fade envelope: quick brighten, slow settle.
+  const p = Math.sin(t * Math.PI);
+
+  ctx.save();
+
+  // Warm brightening wash across the reef band.
+  const wash = ctx.createLinearGradient(0, baseY - bandH * 0.6, 0, h);
+  wash.addColorStop(0, `rgba(255, 244, 214, 0)`);
+  wash.addColorStop(0.5, `rgba(255, 244, 214, ${0.16 * p})`);
+  wash.addColorStop(1, `rgba(255, 244, 214, ${0.05 * p})`);
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, baseY - bandH * 0.6, w, h - (baseY - bandH * 0.6));
+
+  // Coral-pop sparkle bursts at a handful of reef slots.
+  const bursts = 6;
+  for (let i = 0; i < bursts; i++) {
+    const bx = ((i + 0.5) / bursts) * w + (rand(i * 4.1) - 0.5) * 40;
+    const by = baseY - rand(i * 2.7) * bandH * 0.5;
+    const delay = rand(i * 9.3) * 0.35;
+    const lp = Math.max(0, Math.min(1, (t - delay) / (1 - delay)));
+    if (lp <= 0 || lp >= 1) continue;
+    const r = lp * 22;
+    ctx.globalAlpha = (1 - lp) * 0.8;
+    ctx.strokeStyle = "#fff4d6";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(bx, by, r, 0, Math.PI * 2);
+    ctx.stroke();
+    // A few radiating glints.
+    for (let s = 0; s < 4; s++) {
+      const ang = (s / 4) * Math.PI * 2 + i;
+      ctx.beginPath();
+      ctx.moveTo(bx + Math.cos(ang) * r * 0.4, by + Math.sin(ang) * r * 0.4);
+      ctx.lineTo(bx + Math.cos(ang) * r * 1.3, by + Math.sin(ang) * r * 1.3);
+      ctx.stroke();
+    }
+  }
+
+  // A couple of small fish dart through, celebrating the new growth.
+  for (let f = 0; f < 2; f++) {
+    const dir = f % 2 === 0 ? 1 : -1;
+    const fy = baseY - bandH * (0.35 + f * 0.25);
+    const fx = dir > 0 ? -30 + t * (w + 60) : w + 30 - t * (w + 60);
+    ctx.save();
+    ctx.globalAlpha = p;
+    ctx.translate(fx, fy);
+    if (dir < 0) ctx.scale(-1, 1);
+    ctx.fillStyle = FISH_COLORS[f % FISH_COLORS.length];
+    ctx.beginPath();
+    ctx.moveTo(6, 0);
+    ctx.quadraticCurveTo(-2, -4, -8, 0);
+    ctx.quadraticCurveTo(-2, 4, 6, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+export function drawReef(ctx, w, h, stageIdx, tick, bloom = null) {
   const idx = Math.max(0, Math.min(3, stageIdx));
   const cfg = STAGE[idx];
   const bandH = Math.min(120, h * 0.22);
@@ -756,6 +848,8 @@ export function drawReef(ctx, w, h, stageIdx, tick) {
       drawBubbleColumn(ctx, ((bcol + 0.5) / cols) * w + 20, h, baseY, tick, bcol + 1);
     }
   }
+
+  drawReefBloom(ctx, w, h, tick, bloom, baseY, bandH);
 
   ctx.restore();
 }

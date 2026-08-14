@@ -15,8 +15,9 @@ import {
   applyPulseEffect,
 } from "../logic/shotAnimation.js";
 import { drawOrganism } from "../logic/organismRenderer.js";
-import { drawPlayer, triggerPose } from "../logic/playerRenderer.js";
-import { drawReef } from "../logic/reefRenderer.js";
+import { drawPlayer, triggerPose, updatePoseTarget, NET_POSE_MS } from "../logic/playerRenderer.js";
+import { drawReef, triggerReefBloom, isReefBloomDone } from "../logic/reefRenderer.js";
+import { drawOceanLife } from "../logic/oceanLife.js";
 import { triggerScreenEffect, tickScreenEffects, getShakeOffset, drawScreenFlash } from "../logic/screenEffects.js";
 import HUD from "../components/HUD.jsx";
 import "./Level2Scene.css";
@@ -69,6 +70,13 @@ function randomOrganisms(canvasW, canvasH) {
 
 // Level 2 uses a distinct teal/emerald reef palette so it reads differently
 // from Level 1's deep-blue water. (Level 3 will get its own palette when built.)
+const OCEAN_LIFE_PALETTE = {
+  caustic: "#7ce8c9",
+  plankton: "#c8f5e8",
+  bubble: "#d5fff0",
+  fish: ["#fbbf24", "#34d399", "#60a5fa"],
+};
+
 function drawOcean(ctx, w, h, tick) {
   const grad = ctx.createLinearGradient(0, 0, 0, h);
   grad.addColorStop(0, "#04293a");
@@ -106,6 +114,8 @@ function drawOcean(ctx, w, h, tick) {
     ctx.stroke();
   }
   ctx.restore();
+
+  drawOceanLife(ctx, w, h, tick, OCEAN_LIFE_PALETTE);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -278,6 +288,7 @@ export default function Level2Scene({ chymp, onMenu }) {
   const rafRef = useRef(null);
   const loopRef = useRef(null); // holds latest loop fn so callback can self-schedule
   const trackerRef = useRef(new MutationTracker());
+  const captureTimerRef = useRef(null); // delays the weapon card so the net throw is visible
   const reducedMotionRef = useRef(
     typeof window !== "undefined"
       ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -310,7 +321,11 @@ export default function Level2Scene({ chymp, onMenu }) {
 
   // Keep the canvas reef in sync with the identified count (drives stage 0–3).
   useEffect(() => {
-    if (stateRef.current) stateRef.current.reefStageIdx = reefStageIdxFor(identified);
+    const s = stateRef.current;
+    if (!s) return;
+    const next = reefStageIdxFor(identified);
+    if (next > s.reefStageIdx) triggerReefBloom(s);
+    s.reefStageIdx = next;
   }, [identified]);
 
   function initState(w, h) {
@@ -326,6 +341,7 @@ export default function Level2Scene({ chymp, onMenu }) {
       h,
       shots: [],
       reefStageIdx: reefStageIdxFor(GameState.getProgress().identifiedCount),
+      reefBloom: null,
     };
   }
 
@@ -337,12 +353,14 @@ export default function Level2Scene({ chymp, onMenu }) {
     if (shot.outcome === "kill" && org) {
       org.fading = true;
       org.fadeProgress = 0;
+      org.killWeaponId = shot.weaponId; // blast takes the weapon's colours
       triggerScreenEffect(s, { kind: "kill" });
     } else if (shot.outcome === "mutate" && org) {
       org.mutateFlash = 0;
       triggerScreenEffect(s, { kind: "mutate" });
     } else if (shot.outcome === "pulse" && org) {
       org.pulseProgress = 0;
+      org.pulseColor = shot.color; // the dose fizzles in the drug's own colour
     }
     // Keep the card hidden until the canvas effect (explosion / mutate flash /
     // pulse) finishes playing — the loop reveals the result once it's done. If
@@ -392,14 +410,17 @@ export default function Level2Scene({ chymp, onMenu }) {
       if (org.fading) {
         return !applyKillEffect(org); // remove when fade complete
       }
-      org.x += org.vx;
-      org.y += org.vy;
-      org.y += Math.sin(s.tick * 0.025 + org.bobOffset) * 0.3;
-      const margin = ORG_RADIUS_BASE + 10;
-      if (org.x < -margin) org.x = s.w + margin;
-      if (org.x > s.w + margin) org.x = -margin;
-      if (org.y < -margin) org.y = s.h + margin;
-      if (org.y > s.h + margin) org.y = -margin;
+      // A netted creature is pinned so the net stays draped over it.
+      if (!org._netted) {
+        org.x += org.vx;
+        org.y += org.vy;
+        org.y += Math.sin(s.tick * 0.025 + org.bobOffset) * 0.3;
+        const margin = ORG_RADIUS_BASE + 10;
+        if (org.x < -margin) org.x = s.w + margin;
+        if (org.x > s.w + margin) org.x = -margin;
+        if (org.y < -margin) org.y = s.h + margin;
+        if (org.y > s.h + margin) org.y = -margin;
+      }
 
       if (org.mutateFlash != null) {
         if (applyMutateFlash(org)) org.mutateFlash = null;
@@ -434,18 +455,21 @@ export default function Level2Scene({ chymp, onMenu }) {
       }
     }
 
+    updatePoseTarget(s, s.organisms); // keep an in-flight net aimed at its creature
+
     tickScreenEffects(s);
     const { dx: shakeDx, dy: shakeDy } = getShakeOffset(s);
     ctx.save();
     ctx.translate(shakeDx, shakeDy);
     drawOcean(ctx, s.w, s.h, s.tick);
-    drawReef(ctx, s.w, s.h, s.reefStageIdx, s.tick);
+    if (isReefBloomDone(s)) s.reefBloom = null;
+    drawReef(ctx, s.w, s.h, s.reefStageIdx, s.tick, s.reefBloom);
     s.organisms.forEach((org) => {
       const mutated = trackerRef.current.isMutated(org.id);
       drawOrganism(ctx, org, org.x, org.y, ORG_RADIUS_BASE, mutated);
     });
     if (s.shots) drawShots(ctx, s.shots);
-    drawPlayer(ctx, chymp, s.playerX, s.playerY, s.facingRight, s.pose);
+    drawPlayer(ctx, chymp, s.playerX, s.playerY, s.facingRight, s.pose, { tick: s.tick, vx: dx, vy: dy });
     ctx.restore();
     drawScreenFlash(ctx, s.w, s.h, s);
 
@@ -477,6 +501,34 @@ export default function Level2Scene({ chymp, onMenu }) {
   }, [loop]);
 
   // ── Keyboard capture helper ───────────────────────────────────────────────
+  // Throw the net, then open the weapon card once it has landed — otherwise the
+  // card (a full overlay) covers the throw entirely and it is never seen.
+  const beginCapture = useCallback((org) => {
+    const s = stateRef.current;
+    if (!s || captureTimerRef.current) return; // ignore while a throw is in flight
+    const mutated = trackerRef.current.isMutated(org.id);
+
+    if (reducedMotionRef.current) {
+      setCapturedOrg(org);
+      setCapturedOrgMutated(mutated);
+      return;
+    }
+
+    org._netted = true; // pin it so the net drapes over it, not past it
+    triggerPose(s, "net", org.x, org.y, null, {
+      orgInstanceId: org.id_instance,
+      targetR: ORG_RADIUS_BASE,
+    });
+    captureTimerRef.current = setTimeout(() => {
+      captureTimerRef.current = null;
+      setCapturedOrg(org);
+      setCapturedOrgMutated(mutated);
+    }, NET_POSE_MS);
+  }, []);
+
+  // Clear a pending capture timer on unmount.
+  useEffect(() => () => clearTimeout(captureTimerRef.current), []);
+
   const tryCapture = useCallback(() => {
     const s = stateRef.current;
     if (!s) return;
@@ -487,12 +539,8 @@ export default function Level2Scene({ chymp, onMenu }) {
       if (dist < CAPTURE_DIST && (!best || dist < best.dist)) return { org, dist };
       return best;
     }, null);
-    if (nearest) {
-      triggerPose(s, "net", nearest.org.x, nearest.org.y);
-      setCapturedOrg(nearest.org);
-      setCapturedOrgMutated(trackerRef.current.isMutated(nearest.org.id));
-    }
-  }, []);
+    if (nearest) beginCapture(nearest.org);
+  }, [beginCapture]);
 
   // ── Keyboard input ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -541,11 +589,7 @@ export default function Level2Scene({ chymp, onMenu }) {
         const dy = org.y - pos.y;
         return Math.sqrt(dx * dx + dy * dy) <= ORG_RADIUS_BASE + 14;
       });
-      if (hit) {
-        triggerPose(s, "net", hit.x, hit.y);
-        setCapturedOrg(hit);
-        setCapturedOrgMutated(trackerRef.current.isMutated(hit.id));
-      }
+      if (hit) beginCapture(hit);
     }
 
     function onTouchStart(e) {
@@ -559,9 +603,7 @@ export default function Level2Scene({ chymp, onMenu }) {
         return Math.sqrt(dx * dx + dy * dy) <= ORG_RADIUS_BASE + 20;
       });
       if (hit && !capturedOrg) {
-        triggerPose(s, "net", hit.x, hit.y);
-        setCapturedOrg(hit);
-        setCapturedOrgMutated(trackerRef.current.isMutated(hit.id));
+        beginCapture(hit);
         return;
       }
       s.touch.active = true;
@@ -593,7 +635,7 @@ export default function Level2Scene({ chymp, onMenu }) {
       canvas.removeEventListener("touchmove", onTouchMove);
       canvas.removeEventListener("touchend", onTouchEnd);
     };
-  }, [capturedOrg]);
+  }, [capturedOrg, beginCapture]);
 
   // ── Weapon choice result handler ──────────────────────────────────────────
   // Called immediately when weapon is chosen, BEFORE card shows result.
@@ -627,6 +669,7 @@ export default function Level2Scene({ chymp, onMenu }) {
         color: weapon.color,
         outcome,
         orgInstanceId: org.id_instance,
+        weaponId,
         reducedMotion: false,
       });
       triggerPose(s, "gun", canvasOrg.x, canvasOrg.y, weaponId);
@@ -689,6 +732,9 @@ export default function Level2Scene({ chymp, onMenu }) {
 
   function handleClose() {
     setCapturedOrg(null);
+    // Release anything still pinned under a net so it resumes drifting.
+    const s = stateRef.current;
+    if (s) s.organisms.forEach((o) => { delete o._netted; });
     animatingShotRef.current = false;
     setAnimatingShot(false);
     if (pendingCompleteRef.current) {

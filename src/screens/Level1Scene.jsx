@@ -4,8 +4,10 @@ import { GameState } from "../logic/gameState.js";
 import { MutationTracker } from "../logic/mutation.js";
 import { getReefStage, REEF_STAGES } from "../data/progression.js";
 import { drawOrganism } from "../logic/organismRenderer.js";
-import { drawPlayer } from "../logic/playerRenderer.js";
-import { drawReef } from "../logic/reefRenderer.js";
+import { drawPlayer, triggerPose, updatePoseTarget, NET_POSE_MS } from "../logic/playerRenderer.js";
+import { prefersReducedMotion } from "../logic/organismSprites.js";
+import { drawReef, triggerReefBloom, isReefBloomDone } from "../logic/reefRenderer.js";
+import { drawOceanLife } from "../logic/oceanLife.js";
 import InfoCard from "../components/InfoCard.jsx";
 import HUD from "../components/HUD.jsx";
 import "./Level1Scene.css";
@@ -55,6 +57,13 @@ function randomOrganisms(canvasW, canvasH) {
 }
 
 // ── Ocean background painter ──────────────────────────────────────────────────
+const OCEAN_LIFE_PALETTE = {
+  caustic: "#8ecfff",
+  plankton: "#bfe8ff",
+  bubble: "#cdeeff",
+  fish: ["#fbbf24", "#fb7185", "#60a5fa"],
+};
+
 function drawOcean(ctx, w, h, tick) {
   // Gradient background
   const grad = ctx.createLinearGradient(0, 0, 0, h);
@@ -95,6 +104,8 @@ function drawOcean(ctx, w, h, tick) {
     ctx.stroke();
   }
   ctx.restore();
+
+  drawOceanLife(ctx, w, h, tick, OCEAN_LIFE_PALETTE);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -129,8 +140,9 @@ export default function Level1Scene({ chymp, onMenu }) {
       keys: {},
       touch: { active: false, lastX: 0, lastY: 0 },
       tick: 0,
-      netAnim: null, // { tx, ty, t } — net-throw flourish on capture
+      pose: null, // active Captain pose (the capture net) — see playerRenderer.js
       reefStageIdx: reefStageIdxFor(GameState.getProgress().identifiedCount),
+      reefBloom: null, // reef stage-advance flourish — see reefRenderer.js
       w,
       h,
     };
@@ -174,8 +186,10 @@ export default function Level1Scene({ chymp, onMenu }) {
     s.playerX = Math.max(PLAYER_RADIUS, Math.min(s.w - PLAYER_RADIUS, s.playerX + dx));
     s.playerY = Math.max(PLAYER_RADIUS, Math.min(s.h - PLAYER_RADIUS, s.playerY + dy));
 
-    // Drift organisms
+    // Drift organisms. A netted creature is pinned in place so the net that
+    // lands on it stays draped over it instead of sliding off.
     s.organisms.forEach((org) => {
+      if (org._netted) return;
       org.x += org.vx;
       org.y += org.vy;
       // Gentle bob
@@ -188,46 +202,20 @@ export default function Level1Scene({ chymp, onMenu }) {
       if (org.y > s.h + margin) org.y = -margin;
     });
 
+    // Keep an in-flight net aimed at its creature (a no-op once it has landed,
+    // since netted creatures stop drifting).
+    updatePoseTarget(s, s.organisms);
+
     // Draw
     drawOcean(ctx, s.w, s.h, s.tick);
-    drawReef(ctx, s.w, s.h, s.reefStageIdx, s.tick);
+    if (isReefBloomDone(s)) s.reefBloom = null;
+    drawReef(ctx, s.w, s.h, s.reefStageIdx, s.tick, s.reefBloom);
     s.organisms.forEach((org) => {
       const mutated = trackerRef.current.isMutated(org.id);
       drawOrganism(ctx, org, org.x, org.y, ORG_RADIUS_BASE, mutated);
     });
-    drawPlayer(ctx, chymp, s.playerX, s.playerY, s.facingRight);
-
-    // Net-throw flourish: a line from the diver to the target plus an expanding
-    // hoop, drawn for the ~14 frames between the capture press and the card.
-    if (s.netAnim) {
-      const n = s.netAnim;
-      n.t++;
-      const prog = Math.min(1, n.t / 14);
-      const hx = s.playerX + (n.tx - s.playerX) * prog;
-      const hy = s.playerY + (n.ty - s.playerY) * prog;
-      ctx.save();
-      ctx.globalAlpha = 0.85 * (1 - prog * 0.3);
-      ctx.strokeStyle = "#eaf6ff";
-      ctx.lineWidth = 2;
-      // Throw line
-      ctx.beginPath();
-      ctx.moveTo(s.playerX, s.playerY);
-      ctx.lineTo(hx, hy);
-      ctx.stroke();
-      // Net hoop (grows as it lands)
-      const rr = 8 + prog * 22;
-      ctx.beginPath();
-      ctx.arc(hx, hy, rr, 0, Math.PI * 2);
-      ctx.stroke();
-      // Net mesh
-      ctx.globalAlpha *= 0.5;
-      ctx.beginPath();
-      ctx.moveTo(hx - rr, hy); ctx.lineTo(hx + rr, hy);
-      ctx.moveTo(hx, hy - rr); ctx.lineTo(hx, hy + rr);
-      ctx.stroke();
-      ctx.restore();
-      if (n.t > 14) s.netAnim = null;
-    }
+    // Drawn last so the thrown net lands on top of the creature it catches.
+    drawPlayer(ctx, chymp, s.playerX, s.playerY, s.facingRight, s.pose, { tick: s.tick, vx: dx, vy: dy });
 
     rafRef.current = requestAnimationFrame(loopRef.current);
   }, [chymp]);
@@ -264,20 +252,37 @@ export default function Level1Scene({ chymp, onMenu }) {
 
   // Keep the canvas reef in sync with the identified count (drives stage 0–3).
   useEffect(() => {
-    if (stateRef.current) stateRef.current.reefStageIdx = reefStageIdxFor(identified);
+    const s = stateRef.current;
+    if (!s) return;
+    const next = reefStageIdxFor(identified);
+    if (next > s.reefStageIdx) triggerReefBloom(s);
+    s.reefStageIdx = next;
   }, [identified]);
 
   // ── Capture: throw the net, then open the info card a beat later ───────────
   const beginCapture = useCallback((org) => {
     const s = stateRef.current;
     if (!s || captureTimerRef.current) return; // ignore while a throw is in flight
-    s.netAnim = { tx: org.x, ty: org.y, t: 0 };
     const mutated = trackerRef.current.isMutated(org.id);
+
+    // Reduced motion: skip the throw entirely and go straight to the card.
+    if (prefersReducedMotion()) {
+      setCapturedOrg(org);
+      setCapturedOrgMutated(mutated);
+      return;
+    }
+
+    org._netted = true; // pin it so the net drapes over it, not past it
+    triggerPose(s, "net", org.x, org.y, null, {
+      orgInstanceId: org.id_instance,
+      targetR: ORG_RADIUS_BASE,
+    });
+    // Hold the card back for the whole throw so the net is actually visible.
     captureTimerRef.current = setTimeout(() => {
       captureTimerRef.current = null;
       setCapturedOrg(org);
       setCapturedOrgMutated(mutated);
-    }, 240);
+    }, NET_POSE_MS);
   }, []);
 
   // Clear any pending capture timer on unmount.
@@ -454,6 +459,9 @@ export default function Level1Scene({ chymp, onMenu }) {
   // ── Close info card (called when player dismisses result or × button) ─────
   function handleClose() {
     setCapturedOrg(null);
+    // Release anything still pinned under a net so it resumes drifting.
+    const s = stateRef.current;
+    if (s) s.organisms.forEach((o) => { delete o._netted; });
     if (pendingCompleteRef.current) {
       pendingCompleteRef.current = false;
       setTimeout(() => setPatrolComplete(true), 300);

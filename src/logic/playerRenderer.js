@@ -7,8 +7,9 @@
  *              Electric Harpoon / Golden Anchor Launcher), aimed at the target
  *              with a matching muzzle effect (bubbles / electric arc / heavy
  *              burst) and a recoil kick sized to that weapon's weight.
- *   - "net"  — a thrown net (rope + expanding mesh ring) that travels from the
- *              Captain's hand toward the target.
+ *   - "net"  — a four-phase capture net: the Captain holds a gathered bundle,
+ *              winds it back, throws it (spinning open along an arc), and it
+ *              drapes over the creature and settles. Slow enough to follow.
  *
  * Trigger a pose from a scene with triggerPose(stateRef.current, kind, tx, ty)
  * and pass the stored pose to drawPlayer(..., state.pose). Poses auto-expire
@@ -17,6 +18,8 @@
  * The image lives in /public and is resolved through Vite's base path so it
  * works under the GitHub Pages subpath (base: '/SEACHYMP-Bug-Blasters/').
  */
+
+import { prefersReducedMotion } from "./organismSprites.js";
 
 const SPRITE_SRC = `${import.meta.env.BASE_URL}art/chymps/captain.webp`;
 
@@ -29,7 +32,10 @@ const ASPECT = 553 / 734;
 const SPRITE_H = 78;
 
 const GUN_DUR = 1.0; // seconds — long enough to read the weapon + muzzle effect
-const NET_DUR = 0.55;
+const NET_DUR = 1.5; // seconds — long enough to read hold → windup → throw → drape
+
+/** Net pose length in milliseconds — scenes use this to time the capture card. */
+export const NET_POSE_MS = NET_DUR * 1000;
 
 const _now = () => (typeof performance !== "undefined" ? performance.now() : Date.now()) / 1000;
 
@@ -40,10 +46,28 @@ const _now = () => (typeof performance !== "undefined" ? performance.now() : Dat
  * @param {number} tx,ty  target canvas coords (e.g. the organism position)
  * @param {string} [weaponId]  which weapon art to draw for a "gun" pose
  *   ("ceftriaxone" | "cefepime" | "carbapenem"); falls back to a generic gun.
+ * @param {object} [opts]
+ *   orgInstanceId — target's id_instance, so a "net" pose can track a drifting
+ *     creature via updatePoseTarget()
+ *   targetR — the creature's radius, so the draped net is sized to fit over it
  */
-export function triggerPose(state, kind, tx, ty, weaponId) {
+export function triggerPose(state, kind, tx, ty, weaponId, opts = {}) {
   if (!state) return;
-  state.pose = { kind, t0: _now(), tx, ty, weaponId };
+  state.pose = { kind, t0: _now(), tx, ty, weaponId, ...opts };
+}
+
+/**
+ * updatePoseTarget — keep an in-flight net aimed at its creature as it drifts.
+ * Call once per frame from the scene loop, before drawing. No-op for other poses.
+ */
+export function updatePoseTarget(state, organisms) {
+  const pose = state?.pose;
+  if (!pose || pose.kind !== "net" || !pose.orgInstanceId || !organisms) return;
+  const org = organisms.find((o) => o.id_instance === pose.orgInstanceId);
+  if (org) {
+    pose.tx = org.x;
+    pose.ty = org.y;
+  }
 }
 
 function roundRect(ctx, x, y, w, h, r) {
@@ -291,48 +315,239 @@ function drawWeapon(ctx, hx, hy, a) {
   renderer(ctx, hx, hy, a);
 }
 
-// Thrown net: rope from the hand to an expanding mesh ring traveling to the target.
-function drawNet(ctx, hx, hy, a) {
-  const ease = 1 - Math.pow(1 - a.p, 2); // easeOutQuad
-  const cx = hx + (a.tx - hx) * ease;
-  const cy = hy + (a.ty - hy) * ease;
-  const R = 4 + ease * 16;
-  const alpha = a.p < 0.85 ? 0.9 : 0.9 * (1 - (a.p - 0.85) / 0.15);
+// ── Capture net ───────────────────────────────────────────────────────────────
+// The throw is split into four readable phases so a player can actually follow
+// what the Captain is doing, rather than seeing a ring blink onto the creature:
+//   hold   — a gathered bundle of net sits in his hand and lifts as he sets up
+//   windup — he draws the bundle back behind him
+//   flight — it leaves his hand, spins open into a full circle and arcs across
+//            to the creature with the rope trailing from his hand
+//   drape  — it lands over the creature, sags under its own weight, and shakes
+//            as the creature struggles inside before settling
+// Values are fractions of the pose duration (NET_DUR), each the phase's END.
+const NET_PHASES = { hold: 0.18, windup: 0.34, flight: 0.62 };
+
+const NET_ROPE = "#cbb88f";
+const NET_MESH = "#eef0e0";
+const NET_WEIGHT = "#9a8b63";
+
+// Rope from the Captain's hand to the net, bowed by `slack` so it hangs rather
+// than reading as a laser-straight line.
+function drawRope(ctx, x1, y1, x2, y2, slack) {
+  ctx.save();
+  ctx.strokeStyle = NET_ROPE;
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.quadraticCurveTo((x1 + x2) / 2, (y1 + y2) / 2 + slack, x2, y2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// The gathered net before it is thrown: a bunched oval of mesh with a couple of
+// loose strands and weighted beads hanging off it.
+function drawNetBundle(ctx, cx, cy, size, rot) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rot);
+  ctx.strokeStyle = NET_MESH;
+  ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, size, size * 0.72, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.lineWidth = 0.8;
+  for (let i = -1; i <= 1; i++) {
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.9, i * size * 0.36);
+    ctx.lineTo(size * 0.9, i * size * 0.36);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(i * size * 0.5, -size * 0.68);
+    ctx.lineTo(i * size * 0.5, size * 0.68);
+    ctx.stroke();
+  }
+  // loose strand hanging out of the bundle
+  ctx.strokeStyle = NET_ROPE;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.4, size * 0.6);
+  ctx.quadraticCurveTo(-size * 0.1, size * 1.5, size * 0.35, size * 1.25);
+  ctx.stroke();
+  ctx.restore();
 
   ctx.save();
-  ctx.globalAlpha = Math.max(0, alpha);
-  // rope
-  ctx.strokeStyle = "#cbb88f";
-  ctx.lineWidth = 1.5;
+  ctx.fillStyle = NET_WEIGHT;
+  for (let i = 0; i < 4; i++) {
+    const wa = rot + i * 1.6;
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(wa) * size, cy + Math.sin(wa) * size * 0.72, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// The opened net: a rim with bowed mesh chords (so it reads as cloth, not a
+// wheel) and weighted beads around the edge. `squash` flattens it vertically —
+// oscillating it during flight sells the tumble; a fixed value during the drape
+// makes it read as lying flat over the creature.
+function drawNetMesh(ctx, cx, cy, R, squash, rot, sag) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rot);
+  ctx.scale(1, squash);
+  ctx.strokeStyle = NET_MESH;
+  ctx.lineWidth = 1.3;
   ctx.beginPath();
-  ctx.moveTo(hx, hy);
-  ctx.lineTo(cx, cy);
+  ctx.arc(0, 0, R, 0, Math.PI * 2);
   ctx.stroke();
-  // net ring
-  ctx.strokeStyle = "#eef0e0";
-  ctx.lineWidth = 1.2;
-  ctx.beginPath();
-  ctx.arc(cx, cy, R, 0, Math.PI * 2);
-  ctx.stroke();
-  // mesh crosshatch (chords across the ring)
-  for (const f of [-0.5, 0, 0.5]) {
+  ctx.lineWidth = 0.9;
+  for (const f of [-0.62, -0.31, 0, 0.31, 0.62]) {
     const off = f * R;
     const half = Math.sqrt(Math.max(0, R * R - off * off));
     ctx.beginPath();
-    ctx.moveTo(cx - half, cy + off);
-    ctx.lineTo(cx + half, cy + off);
-    ctx.moveTo(cx + off, cy - half);
-    ctx.lineTo(cx + off, cy + half);
+    ctx.moveTo(-half, off);
+    ctx.quadraticCurveTo(0, off + sag * R, half, off);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(off, -half);
+    ctx.quadraticCurveTo(off + sag * R * 0.4, 0, off, half);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Rim weights drawn outside the scale() so they stay round beads.
+  ctx.save();
+  ctx.fillStyle = NET_WEIGHT;
+  for (let i = 0; i < 8; i++) {
+    const wa = rot + (i / 8) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(wa) * R, cy + Math.sin(wa) * R * squash, 1.7, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawNet(ctx, hx, hy, a) {
+  const p = a.p;
+  const aim = a.aim;
+  const back = aim + Math.PI; // behind the Captain, for the windup
+  const R_DRAPED = (a.targetR || 24) * 1.6; // a little wider than the creature
+
+  // HOLD — bundle in hand, lifting slightly as he sets up the throw.
+  if (p < NET_PHASES.hold) {
+    const q = p / NET_PHASES.hold;
+    const lift = Math.sin(q * Math.PI) * 3;
+    drawNetBundle(ctx, hx + Math.cos(aim) * 3, hy - lift + 2, 7, q * 0.6);
+    return;
+  }
+
+  // WINDUP — drawn back behind him, rope going taut.
+  if (p < NET_PHASES.windup) {
+    const q = (p - NET_PHASES.hold) / (NET_PHASES.windup - NET_PHASES.hold);
+    const pull = 15 * Math.sin(q * Math.PI * 0.5);
+    const bx = hx + Math.cos(back) * pull;
+    const by = hy + Math.sin(back) * pull - 4 * q;
+    drawRope(ctx, hx, hy, bx, by, 3);
+    drawNetBundle(ctx, bx, by, 7 + q * 1.5, 0.6 + q * 1.2);
+    return;
+  }
+
+  // FLIGHT — released, spinning open, arcing across to the creature.
+  if (p < NET_PHASES.flight) {
+    const q = (p - NET_PHASES.windup) / (NET_PHASES.flight - NET_PHASES.windup);
+    const ease = 1 - Math.pow(1 - q, 2); // easeOutQuad — quick release, slowing arrival
+    const sx = hx + Math.cos(back) * 15;
+    const sy = hy + Math.sin(back) * 15;
+    const cx = sx + (a.tx - sx) * ease;
+    const cy = sy + (a.ty - sy) * ease - Math.sin(ease * Math.PI) * 26; // throw arc
+    const spin = q * Math.PI * 2.4; // a bit over one full tumble
+    const R = 5 + ease * (R_DRAPED - 5); // bundle opens out into a full net
+    const squash = 0.35 + 0.65 * Math.abs(Math.cos(spin));
+    drawRope(ctx, hx, hy, cx, cy, 9 * (1 - q));
+    drawNetMesh(ctx, cx, cy, R, squash, spin, 0.06 + q * 0.1);
+    return;
+  }
+
+  // DRAPE — settled over the creature, wobbling as it struggles, then still.
+  const q = (p - NET_PHASES.flight) / (1 - NET_PHASES.flight);
+  const damp = Math.exp(-q * 4.5);
+  const wobble = Math.sin(q * 26) * damp;
+  const cx = a.tx + Math.sin(q * 34 + 1.1) * damp * 2.4;
+  const cy = a.ty + Math.cos(q * 41) * damp * 1.7;
+  const R = R_DRAPED * (1 + wobble * 0.08);
+  const squash = 0.62 + wobble * 0.06;
+
+  // Bubbles puffed out from under the rim as it lands.
+  if (q < 0.5) {
+    const bf = 1 - q / 0.5;
+    ctx.save();
+    ctx.strokeStyle = "#e8f4ff";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 6; i++) {
+      const ba = (i / 6) * Math.PI * 2 + 0.4;
+      const bd = R * (0.9 + (1 - bf) * 0.5);
+      ctx.globalAlpha = bf * 0.7;
+      ctx.beginPath();
+      ctx.arc(
+        cx + Math.cos(ba) * bd,
+        cy + Math.sin(ba) * bd * squash - (1 - bf) * 10,
+        1.4 + bf * 1.6,
+        0,
+        Math.PI * 2
+      );
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  ctx.save();
+  ctx.globalAlpha = p > 0.95 ? Math.max(0, 1 - (p - 0.95) / 0.05) : 1;
+  drawRope(ctx, hx, hy, cx - Math.cos(aim) * R * 0.6, cy - Math.sin(aim) * R * 0.6 * squash, 11);
+  drawNetMesh(ctx, cx, cy, R, squash, 0.2, 0.24);
+  ctx.restore();
+}
+
+// Idle/swim motion tuning (skipped entirely under prefersReducedMotion()).
+const BOB_IDLE_AMP = 1.6;
+const BOB_IDLE_FREQ = 0.045;
+const BOB_SWIM_AMP = 3.2;
+const BOB_SWIM_FREQ = 0.16;
+const LEAN_MAX = 0.16; // radians
+const MOVE_EPS = 0.05;
+
+/**
+ * drawCaptainBubbles — a short trail of small bubbles released from behind
+ * the Captain while swimming, drifting up and fading. Purely decorative.
+ */
+function drawCaptainBubbles(ctx, px, py, facingRight, tick) {
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,255,0.55)";
+  ctx.lineWidth = 1;
+  const behind = facingRight ? -1 : 1;
+  for (let i = 0; i < 4; i++) {
+    const seed = i * 17.3;
+    const life = ((tick * 1.3 + seed * 9) % 50) / 50;
+    const bx = px + behind * (8 + life * 16) + Math.sin(tick * 0.1 + seed) * 2.5;
+    const by = py + SPRITE_H * 0.06 - life * 20;
+    const r = 1 + life * 2;
+    ctx.globalAlpha = 0.5 * (1 - life);
+    ctx.beginPath();
+    ctx.arc(bx, by, r, 0, Math.PI * 2);
     ctx.stroke();
   }
   ctx.restore();
 }
 
 /**
- * drawPlayer(ctx, chymp, x, y, facingRight, pose) — (x, y) is the player CENTER.
- * `pose` is the scene's state.pose object (or null/undefined for idle).
+ * drawPlayer(ctx, chymp, x, y, facingRight, pose, motion) — (x, y) is the
+ * player CENTER. `pose` is the scene's state.pose object (or null/undefined
+ * for idle). `motion` is optional `{ tick, vx, vy }` — the current frame's
+ * tick counter and movement delta — used for the idle swim bob, a lean into
+ * the direction of travel, and a bubble stream while moving. Omit it (or
+ * leave vx/vy at 0) for a still, unbobbed Captain. All of it is skipped
+ * under prefersReducedMotion(), matching every other animated flourish here.
  */
-export function drawPlayer(ctx, chymp, x, y, facingRight = true, pose = null) {
+export function drawPlayer(ctx, chymp, x, y, facingRight = true, pose = null, motion = null) {
   const color = chymp?.color || "#38b2e8";
 
   // Resolve an active (non-expired) pose.
@@ -355,8 +570,31 @@ export function drawPlayer(ctx, chymp, x, y, facingRight = true, pose = null) {
     rx = -Math.cos(active.aim) * kick;
     ry = -Math.sin(active.aim) * kick;
   }
+
+  // Idle swim motion — a gentle bob at rest, a stronger one while moving,
+  // plus a lean into the direction of travel. Suppressed during an active
+  // pose (the throw/shot already reads as motion on its own) and under
+  // prefersReducedMotion().
+  const tick = motion?.tick ?? 0;
+  const vx = motion?.vx ?? 0;
+  const vy = motion?.vy ?? 0;
+  const moving = Math.abs(vx) > MOVE_EPS || Math.abs(vy) > MOVE_EPS;
+  const reduced = prefersReducedMotion();
+  let bob = 0, lean = 0;
+  if (!reduced && !active && motion) {
+    bob = moving
+      ? Math.sin(tick * BOB_SWIM_FREQ) * BOB_SWIM_AMP
+      : Math.sin(tick * BOB_IDLE_FREQ) * BOB_IDLE_AMP;
+    if (moving) lean = Math.max(-LEAN_MAX, Math.min(LEAN_MAX, vx * 0.05));
+  }
+
   const px = x + rx;
-  const py = y + ry;
+  const py = y + ry + bob;
+
+  // Bubble stream trails behind while swimming.
+  if (!reduced && !active && moving) {
+    drawCaptainBubbles(ctx, px, py, facingRight, tick);
+  }
 
   // Soft glow / shadow puddle under the diver.
   ctx.save();
@@ -387,6 +625,7 @@ export function drawPlayer(ctx, chymp, x, y, facingRight = true, pose = null) {
     ctx.save();
     ctx.translate(px, py);
     if (!facingRight) ctx.scale(-1, 1);
+    ctx.rotate(facingRight ? lean : -lean);
     ctx.drawImage(sprite, -w / 2, -h / 2, w, h);
     ctx.restore();
   }

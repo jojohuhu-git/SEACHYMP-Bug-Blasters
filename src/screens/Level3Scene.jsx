@@ -15,8 +15,9 @@ import {
   applyPulseEffect,
 } from "../logic/shotAnimation.js";
 import { drawOrganism } from "../logic/organismRenderer.js";
-import { drawPlayer, triggerPose } from "../logic/playerRenderer.js";
-import { drawReef } from "../logic/reefRenderer.js";
+import { drawPlayer, triggerPose, updatePoseTarget, NET_POSE_MS } from "../logic/playerRenderer.js";
+import { drawReef, triggerReefBloom, isReefBloomDone } from "../logic/reefRenderer.js";
+import { drawOceanLife } from "../logic/oceanLife.js";
 import { triggerScreenEffect, tickScreenEffects, getShakeOffset, drawScreenFlash } from "../logic/screenEffects.js";
 import HUD from "../components/HUD.jsx";
 import "./Level3Scene.css";
@@ -52,6 +53,13 @@ function shuffle(arr) {
 //   Level 1: deep-blue (#001232 → #0d3b6e → #1a6fa0)
 //   Level 2: teal/emerald (#04293a → #0a5a52 → #1a8f7a)
 //   Level 3: indigo/violet twilight (#0e0730 → #2d1460 → #4c1d95)
+const OCEAN_LIFE_PALETTE = {
+  caustic: "#c4b5fd",
+  plankton: "#e0d4ff",
+  bubble: "#ede4ff",
+  fish: ["#f472b6", "#a78bfa", "#60a5fa"],
+};
+
 function drawOcean(ctx, w, h, tick) {
   const grad = ctx.createLinearGradient(0, 0, 0, h);
   grad.addColorStop(0, "#0e0730");
@@ -91,6 +99,8 @@ function drawOcean(ctx, w, h, tick) {
     ctx.stroke();
   }
   ctx.restore();
+
+  drawOceanLife(ctx, w, h, tick, OCEAN_LIFE_PALETTE);
 }
 
 function randomOrganisms(canvasW, canvasH) {
@@ -380,6 +390,7 @@ export default function Level3Scene({ chymp, onMenu }) {
   const rafRef = useRef(null);
   const loopRef = useRef(null); // holds latest loop fn so callback can self-schedule
   const trackerRef = useRef(new MutationTracker());
+  const captureTimerRef = useRef(null); // delays the case card so the net throw is visible
   const reducedMotionRef = useRef(
     typeof window !== "undefined"
       ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -415,7 +426,11 @@ export default function Level3Scene({ chymp, onMenu }) {
 
   // Keep the canvas reef in sync with the identified count (drives stage 0–3).
   useEffect(() => {
-    if (stateRef.current) stateRef.current.reefStageIdx = reefStageIdxFor(identified);
+    const s = stateRef.current;
+    if (!s) return;
+    const next = reefStageIdxFor(identified);
+    if (next > s.reefStageIdx) triggerReefBloom(s);
+    s.reefStageIdx = next;
   }, [identified]);
 
   function initState(w, h) {
@@ -431,6 +446,7 @@ export default function Level3Scene({ chymp, onMenu }) {
       h,
       shots: [],
       reefStageIdx: reefStageIdxFor(GameState.getProgress().identifiedCount),
+      reefBloom: null,
     };
   }
 
@@ -443,12 +459,14 @@ export default function Level3Scene({ chymp, onMenu }) {
     if (shot.outcome === "kill" && org) {
       org.fading = true;
       org.fadeProgress = 0;
+      org.killWeaponId = shot.weaponId; // blast takes the weapon's colours
       triggerScreenEffect(s, { kind: "kill" });
     } else if (shot.outcome === "mutate" && org) {
       org.mutateFlash = 0;
       triggerScreenEffect(s, { kind: "mutate" });
     } else if (shot.outcome === "pulse" && org) {
       org.pulseProgress = 0;
+      org.pulseColor = shot.color; // the dose fizzles in the drug's own colour
     }
     // Keep the card hidden until the canvas effect finishes playing — the loop
     // reveals the result once it's done. Reveal now if the org is already gone.
@@ -505,7 +523,8 @@ export default function Level3Scene({ chymp, onMenu }) {
     });
 
     s.organisms.forEach((org) => {
-      if (!org.fading) {
+      // A netted creature is pinned so the net stays draped over it.
+      if (!org.fading && !org._netted) {
         org.x += org.vx;
         org.y += org.vy;
         org.y += Math.sin(s.tick * 0.025 + org.bobOffset) * 0.3;
@@ -553,18 +572,21 @@ export default function Level3Scene({ chymp, onMenu }) {
     }
 
     // Draw
+    updatePoseTarget(s, s.organisms); // keep an in-flight net aimed at its creature
+
     tickScreenEffects(s);
     const { dx: shakeDx, dy: shakeDy } = getShakeOffset(s);
     ctx.save();
     ctx.translate(shakeDx, shakeDy);
     drawOcean(ctx, s.w, s.h, s.tick);
-    drawReef(ctx, s.w, s.h, s.reefStageIdx, s.tick);
+    if (isReefBloomDone(s)) s.reefBloom = null;
+    drawReef(ctx, s.w, s.h, s.reefStageIdx, s.tick, s.reefBloom);
     s.organisms.forEach((org) => {
       const mutated = trackerRef.current.isMutated(org.id);
       drawOrganism(ctx, org, org.x, org.y, ORG_RADIUS_BASE, mutated);
     });
     if (s.shots) drawShots(ctx, s.shots);
-    drawPlayer(ctx, chymp, s.playerX, s.playerY, s.facingRight, s.pose);
+    drawPlayer(ctx, chymp, s.playerX, s.playerY, s.facingRight, s.pose, { tick: s.tick, vx: dx, vy: dy });
     ctx.restore();
     drawScreenFlash(ctx, s.w, s.h, s);
 
@@ -595,6 +617,39 @@ export default function Level3Scene({ chymp, onMenu }) {
     return () => cancelAnimationFrame(rafRef.current);
   }, [loop]);
 
+  // Throw the net, then open the case card once it has landed — otherwise the
+  // card (a full overlay) covers the throw entirely and it is never seen.
+  const beginCapture = useCallback((org) => {
+    const s = stateRef.current;
+    if (!s || captureTimerRef.current) return; // ignore while a throw is in flight
+    const cs = pickCase(org.id);
+    const mutated = trackerRef.current.isMutated(org.id);
+
+    const reveal = () => {
+      setCapturedOrg(org);
+      setCapturedOrgMutated(mutated);
+      setActiveCase(cs || null);
+    };
+
+    if (reducedMotionRef.current) {
+      reveal();
+      return;
+    }
+
+    org._netted = true; // pin it so the net drapes over it, not past it
+    triggerPose(s, "net", org.x, org.y, null, {
+      orgInstanceId: org.id_instance,
+      targetR: ORG_RADIUS_BASE,
+    });
+    captureTimerRef.current = setTimeout(() => {
+      captureTimerRef.current = null;
+      reveal();
+    }, NET_POSE_MS);
+  }, []);
+
+  // Clear a pending capture timer on unmount.
+  useEffect(() => () => clearTimeout(captureTimerRef.current), []);
+
   // ── Keyboard capture helper ───────────────────────────────────────────────
   const tryCapture = useCallback(() => {
     const s = stateRef.current;
@@ -606,14 +661,8 @@ export default function Level3Scene({ chymp, onMenu }) {
       if (dist < CAPTURE_DIST && (!best || dist < best.dist)) return { org, dist };
       return best;
     }, null);
-    if (nearest) {
-      const cs = pickCase(nearest.org.id);
-      triggerPose(s, "net", nearest.org.x, nearest.org.y);
-      setCapturedOrg(nearest.org);
-      setCapturedOrgMutated(trackerRef.current.isMutated(nearest.org.id));
-      setActiveCase(cs || null);
-    }
-  }, []);
+    if (nearest) beginCapture(nearest.org);
+  }, [beginCapture]);
 
   // ── Keyboard input ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -662,13 +711,7 @@ export default function Level3Scene({ chymp, onMenu }) {
         const ddy = org.y - pos.y;
         return Math.sqrt(ddx * ddx + ddy * ddy) <= ORG_RADIUS_BASE + 14;
       });
-      if (hit) {
-        const cs = pickCase(hit.id);
-        triggerPose(s, "net", hit.x, hit.y);
-        setCapturedOrg(hit);
-        setCapturedOrgMutated(trackerRef.current.isMutated(hit.id));
-        setActiveCase(cs || null);
-      }
+      if (hit) beginCapture(hit);
     }
 
     function onTouchStart(e) {
@@ -682,11 +725,7 @@ export default function Level3Scene({ chymp, onMenu }) {
         return Math.sqrt(ddx * ddx + ddy * ddy) <= ORG_RADIUS_BASE + 20;
       });
       if (hit && !capturedOrg && !animatingShot) {
-        const cs = pickCase(hit.id);
-        triggerPose(s, "net", hit.x, hit.y);
-        setCapturedOrg(hit);
-        setCapturedOrgMutated(trackerRef.current.isMutated(hit.id));
-        setActiveCase(cs || null);
+        beginCapture(hit);
         return;
       }
       s.touch.active = true;
@@ -717,7 +756,7 @@ export default function Level3Scene({ chymp, onMenu }) {
       canvas.removeEventListener("touchmove", onTouchMove);
       canvas.removeEventListener("touchend", onTouchEnd);
     };
-  }, [capturedOrg, animatingShot]);
+  }, [capturedOrg, animatingShot, beginCapture]);
 
   // ── Weapon choice result handler ──────────────────────────────────────────
   function handleWeaponChoice(org, weaponId, result, caseData) {
@@ -753,6 +792,7 @@ export default function Level3Scene({ chymp, onMenu }) {
         color: weapon.color,
         outcome,
         orgInstanceId: org.id_instance,
+        weaponId,
         reducedMotion: false,
       });
       triggerPose(s, "gun", canvasOrg.x, canvasOrg.y, weaponId);
@@ -815,6 +855,9 @@ export default function Level3Scene({ chymp, onMenu }) {
   function handleClose() {
     setCapturedOrg(null);
     setActiveCase(null);
+    // Release anything still pinned under a net so it resumes drifting.
+    const s = stateRef.current;
+    if (s) s.organisms.forEach((o) => { delete o._netted; });
     animatingShotRef.current = false;
     setAnimatingShot(false);
     if (pendingCompleteRef.current) {

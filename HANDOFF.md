@@ -1,5 +1,11 @@
 # SEACHYMP: Bug Blasters — Session Handoff
 
+> **⚠ SUPERSEDED (2026-08-13).** Do not resume from this file. The work it describes was
+> committed as `09497b8` and is finished. The live handoff is
+> [docs/archive/handoff-2026-08-13-special-effects.md](docs/archive/handoff-2026-08-13-special-effects.md),
+> which covers the special-effects overhaul (items 1–4 done but **uncommitted**, item 5 not
+> started). This file is kept only as history.
+
 _Last updated: 2026-08-12_
 
 ## Current state
