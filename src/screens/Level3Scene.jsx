@@ -151,8 +151,7 @@ function CaseCard({ org, caseData, mutated, onWeaponChoice, onClose }) {
       isCorrect = false;
       heading = "Unnecessary treatment.";
       rationale =
-        org.name +
-        " is not an AmpC-producing SEACHYMP organism. Good stewardship = not treating colonizers or bystanders.";
+        "While " + org.name + " can cause infections, it is not an AmpC producer and not the target of this game.";
     } else if (mutated && ["ceftriaxone"].includes(weaponId)) {
       isCorrect = false;
       heading = "Ineffective against mutated form.";
@@ -332,7 +331,7 @@ function CaseCard({ org, caseData, mutated, onWeaponChoice, onClose }) {
               ))}
             </div>
             <button className="l3-release-btn" onClick={handleRelease}>
-              Release — no antibiotic needed for this case
+              Release — this is not an AmpC organism
             </button>
           </div>
         ) : (

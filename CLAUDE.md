@@ -39,7 +39,9 @@ There is **no test suite**. Verify changes with `npm run build` + `npm run lint`
   `INEFFECTIVE_ON_MUTATED`.
 - `src/logic/gameState.js` — localStorage persistence.
 - `src/screens/*` — one full-screen component per screen (Title, SquadSelect,
-  HowToPlay, Level1/2/3Scene, Encyclopedia, MyReef, WeaponsScreen, InGameMenu).
+  HowToPlay, LevelIntro, Level1/2/3Scene, Encyclopedia, MyReef, WeaponsScreen, InGameMenu).
+  `LevelIntro.jsx` (content in `src/data/levelIntros.js`) is a short goal + controls
+  card shown before each level starts — reached from the Title screen, one per level.
 - `src/components/` — InfoCard (capture decision card), HUD.
 - `src/index.css` — CSS design tokens + global styles (edit here for palette).
 - `App.jsx` — screen router / navigation state.
@@ -51,8 +53,11 @@ This is a stewardship teaching tool. Clinical rules should reflect **ACIP/IDSA/
 guideline consensus**, not FDA package-insert minimums. When in doubt, prefer the
 more current stewardship guidance and document the source in `docs/RULES.md`.
 
-## Current rule set (as of 2026-06-04)
-- **Arsenal:** Ceftriaxone, Cefepime, Carbapenems only.
+## Current rule set (as of 2026-08-22)
+- **Arsenal:** Ceftriaxone, Cefepime, Carbapenems only. Carbapenem's `appropriateFor`
+  in `weapons.js` is `["high"]` only (its Weapons-screen tag no longer shows LOW RISK —
+  that tag contradicted the low-risk scoring rule below, where carbapenem is
+  reserve/incorrect for low-risk).
 - **Level 2 scoring (`classifyChoice`):**
   - Non-AmpC distractor → Release is correct; any antibiotic = overtreatment (wrong).
   - SEACHYMP organism + Release → wrong (needed treatment).
@@ -68,10 +73,19 @@ more current stewardship guidance and document the source in `docs/RULES.md`.
   - Carbapenem reserve messaging (updated 2026-06-11): "reserve for mutated AmpC
     organisms resistant to Cefepime, and for ESBL producers." Do NOT cite
     carbapenemase producers as a reserve indication (carbapenems don't treat them).
-- **Mutation:** triggered by 3 inappropriate Ceftriaxone calls on the SAME high-risk
-  organism type. `INEFFECTIVE_ON_MUTATED = ["ceftriaxone"]`. Only high-risk types mutate.
-- **Level 3:** 16 cases, scored as exact match to `correctDecision`. Durations are
-  display-only context (not scored).
+- **Mutation:** triggered by 2 inappropriate Ceftriaxone calls on the SAME high-risk
+  organism type (`MUTATION_THRESHOLD = 2`, lowered from 3 on 2026-08-22).
+  `INEFFECTIVE_ON_MUTATED = ["ceftriaxone"]`. Only high-risk types mutate.
+- **Level 3:** 17 cases, scored as exact match to `correctDecision`. Durations are
+  display-only context (not scored). Added 2026-08-22: a Morganella diabetic-foot/
+  osteomyelitis case (low-risk organism, prolonged 6-week course with no surgical
+  source control → Cefepime), so there are now 2 low-risk-organism-prolonged-course
+  cases where Cefepime beats Ceftriaxone (the other is the pre-existing Serratia
+  endocarditis case). Both rationales now also mention a carbapenem as a reasonable
+  reserve option when Cefepime isn't a good fit for the patient — text only, this
+  does not change scoring (`correctDecision` is still `"cefepime"` for both).
+- **Bonus organism:** still Klebsiella aerogenes (swap to Hafnia was considered and
+  declined by the owner on 2026-08-22 — see `docs/RULES.md` Global notes for why).
 
 ## The rule-change workflow (`docs/RULES.md`)
 1. `docs/RULES.md` mirrors what the code currently enforces **and the player-facing text**:

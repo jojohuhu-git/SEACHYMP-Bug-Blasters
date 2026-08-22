@@ -3,6 +3,7 @@ import { SQUAD } from "./data/squad.js";
 
 import TitleScreen from "./screens/TitleScreen.jsx";
 import HowToPlay from "./screens/HowToPlay.jsx";
+import LevelIntro from "./screens/LevelIntro.jsx";
 import Level1Scene from "./screens/Level1Scene.jsx";
 import Level2Scene from "./screens/Level2Scene.jsx";
 import Level3Scene from "./screens/Level3Scene.jsx";
@@ -18,6 +19,9 @@ import WeaponsScreen from "./screens/WeaponsScreen.jsx";
 const SCREENS = {
   TITLE: "title",
   HOW_TO_PLAY: "how_to_play",
+  LEVEL1_INTRO: "level1_intro",
+  LEVEL2_INTRO: "level2_intro",
+  LEVEL3_INTRO: "level3_intro",
   LEVEL1: "level1",
   LEVEL2: "level2",
   LEVEL3: "level3",
@@ -31,6 +35,9 @@ export default function App() {
   const [screen, setScreen] = useState(SCREENS.TITLE);
   // prevScreen is used to know where to return from sub-screens
   const [prevScreen, setPrevScreen] = useState(SCREENS.TITLE);
+  // pausedLevel tracks which level's pause menu is open, so IN_GAME_MENU
+  // can render the right scene underneath and resume to the right place.
+  const [pausedLevel, setPausedLevel] = useState(SCREENS.LEVEL1);
 
   // Player character is always Captain Chymp (squad selection was removed).
   const chymp = SQUAD[0];
@@ -40,21 +47,23 @@ export default function App() {
     setScreen(nextScreen);
   }, [screen]);
 
-  // ── From TITLE ────────────────────────────────────────────────────────────
+  // ── From TITLE — each level's button opens its intro card first ────────────
   function handlePlay() {
-    go(SCREENS.LEVEL1);
+    go(SCREENS.LEVEL1_INTRO);
   }
 
   function handlePlayLevel2() {
-    go(SCREENS.LEVEL2);
+    go(SCREENS.LEVEL2_INTRO);
   }
 
   function handlePlayLevel3() {
-    go(SCREENS.LEVEL3);
+    go(SCREENS.LEVEL3_INTRO);
   }
 
   // ── In-game menu helpers ──────────────────────────────────────────────────
-  function openInGameMenu() {
+  // Pause whichever level called this, so IN_GAME_MENU knows what to resume.
+  function openInGameMenu(level) {
+    setPausedLevel(level);
     go(SCREENS.IN_GAME_MENU);
   }
 
@@ -95,35 +104,46 @@ export default function App() {
         />
       );
 
+    case SCREENS.LEVEL1_INTRO:
+      return <LevelIntro level={1} onStart={() => go(SCREENS.LEVEL1)} onBack={() => go(SCREENS.TITLE)} />;
+
+    case SCREENS.LEVEL2_INTRO:
+      return <LevelIntro level={2} onStart={() => go(SCREENS.LEVEL2)} onBack={() => go(SCREENS.TITLE)} />;
+
+    case SCREENS.LEVEL3_INTRO:
+      return <LevelIntro level={3} onStart={() => go(SCREENS.LEVEL3)} onBack={() => go(SCREENS.TITLE)} />;
+
     case SCREENS.LEVEL1:
       return (
         <>
-          <Level1Scene chymp={chymp} onMenu={openInGameMenu} />
+          <Level1Scene chymp={chymp} onMenu={() => openInGameMenu(SCREENS.LEVEL1)} />
         </>
       );
 
     case SCREENS.LEVEL2:
       return (
         <>
-          <Level2Scene chymp={chymp} onMenu={() => go(SCREENS.TITLE)} />
+          <Level2Scene chymp={chymp} onMenu={() => openInGameMenu(SCREENS.LEVEL2)} />
         </>
       );
 
     case SCREENS.LEVEL3:
       return (
         <>
-          <Level3Scene chymp={chymp} onMenu={() => go(SCREENS.TITLE)} />
+          <Level3Scene chymp={chymp} onMenu={() => openInGameMenu(SCREENS.LEVEL3)} />
         </>
       );
 
     case SCREENS.IN_GAME_MENU:
       return (
         <>
-          {/* Level1 still renders underneath (paused visually) */}
-          <Level1Scene chymp={chymp} onMenu={() => {}} />
+          {/* The paused level still renders underneath (paused visually) */}
+          {pausedLevel === SCREENS.LEVEL1 && <Level1Scene chymp={chymp} onMenu={() => {}} />}
+          {pausedLevel === SCREENS.LEVEL2 && <Level2Scene chymp={chymp} onMenu={() => {}} />}
+          {pausedLevel === SCREENS.LEVEL3 && <Level3Scene chymp={chymp} onMenu={() => {}} />}
           <InGameMenu
             chymp={chymp}
-            onResume={() => go(SCREENS.LEVEL1)}
+            onResume={() => go(pausedLevel)}
             onHowToPlay={() => handleInGameSub(SCREENS.HOW_TO_PLAY)}
             onQuit={() => go(SCREENS.TITLE)}
             onEncyclopedia={() => handleInGameSub(SCREENS.ENCYCLOPEDIA)}

@@ -116,7 +116,7 @@ export const ORGANISMS = [
     teachingPoint:
       "Hafnia alvei is a HIGH-risk AmpC producer with variable induction risk. Cefepime is preferred over 3rd-gen cephalosporins for serious infections — though short courses for mild, uncomplicated infections may reasonably use Ceftriaxone in some cases.",
     blurb:
-      "A purple blobfish with a perpetually sad face — ugly-cute and mostly harmless. Clinically: infrequent pathogen, but AmpC induction risk is variable enough to warrant Cefepime for serious infections.",
+      "A purple blobfish with a perpetually sad face — ugly-cute, but not to be underestimated. Clinically: infrequent pathogen, but AmpC induction risk is variable enough to warrant Cefepime for serious infections.",
   },
 
   {

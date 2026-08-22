@@ -33,7 +33,7 @@ export default function InGameMenu({ chymp, onResume, onHowToPlay, onQuit, onEnc
           <button className="btn-secondary igm-btn" onClick={onWeapons}>
             Weapons
           </button>
-          <button className="btn-secondary igm-btn igm-btn--quit" onClick={onQuit}>
+          <button className="btn-secondary igm-btn" onClick={onQuit}>
             ← Main Menu
           </button>
         </div>

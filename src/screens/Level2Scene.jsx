@@ -223,7 +223,7 @@ function WeaponChoiceCard({ org, mutated, onWeaponChoice, onClose }) {
               ))}
             </div>
             <button className="l2-release-btn" onClick={handleRelease}>
-              Release — this organism does not need treatment
+              Release — this is not an AmpC organism
             </button>
           </div>
         ) : (

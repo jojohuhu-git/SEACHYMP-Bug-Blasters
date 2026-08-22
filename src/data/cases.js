@@ -35,7 +35,7 @@ export const CASES = [
     duration: "6 weeks",
     correctDecision: "cefepime",
     rationale:
-      "Even for low-risk AmpC organisms, a 6-week endocarditis course raises the risk of de-repression under sustained cephalosporin pressure — Cefepime is safer for prolonged therapy.",
+      "Even for low-risk AmpC organisms, a 6-week endocarditis course raises the risk of de-repression under sustained cephalosporin pressure — Cefepime is safer for prolonged therapy. A carbapenem may also be reasonable to reserve for situations where Cefepime is not a good option for the patient.",
   },
   {
     id: "case_serratia_crbsi",
@@ -151,6 +151,16 @@ export const CASES = [
     correctDecision: "ceftriaxone",
     rationale:
       "Low-risk AmpC UTI with source control achieved — a 5-day Ceftriaxone course is adequate; re-evaluate if clinical deterioration occurs.",
+  },
+  {
+    id: "case_morganella_dfi_osteo",
+    organismId: "morganella",
+    infection: "Diabetic foot infection with osteomyelitis",
+    sourceControl: "Amputation recommended but declined by patient — no surgical source control",
+    duration: "6 weeks",
+    correctDecision: "cefepime",
+    rationale:
+      "Morganella is low-risk AmpC, but a prolonged 6-week course with no surgical source control (amputation declined) raises the risk of AmpC de-repression under sustained cephalosporin pressure — Cefepime is the safer choice for extended therapy. A carbapenem may also be reasonable to reserve for situations where Cefepime is not a good option for the patient.",
   },
 
   // ── Providencia (low-risk AmpC) ──────────────────────────────────────────

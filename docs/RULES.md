@@ -13,7 +13,7 @@
 > **Change to / Notes** column). Hand the file back and I'll apply every edit in one pass
 > across all code surfaces, then rebuild, re-verify, and redeploy.
 
-Last generated: **2026-08-12** · Organisms: **22** · Level 3 cases: **16** · Source of truth: `src/`
+Last generated: **2026-08-22** · Organisms: **22** · Level 3 cases: **17** · Source of truth: `src/`
 
 ---
 
@@ -27,6 +27,8 @@ Last generated: **2026-08-12** · Organisms: **22** · Level 3 cases: **16** · 
 | Mutation banners | `Level2Scene.jsx`, `Level3Scene.jsx`, `InfoCard.jsx`, `Level1Scene.jsx`, `HowToPlay.jsx` |
 | Mutation rule (threshold, ineffective drug) | `src/logic/mutation.js` |
 | Weapon names/descriptions | `src/data/weapons.js` |
+| Release button label (L2/L3) | `Level2Scene.jsx`, `Level3Scene.jsx` |
+| Per-level intro card (goal + controls) | `src/data/levelIntros.js`, `LevelIntro.jsx` |
 
 > ⚠ **Note on blurbs:** several catch blurbs still describe the *previous* placeholder
 > creature, not the new sea-creature art (e.g. Hafnia reads "purple blobfish" but the art is
@@ -44,7 +46,10 @@ Last generated: **2026-08-12** · Organisms: **22** · Level 3 cases: **16** · 
 | **Low-risk AmpC** | Serratia marcescens, Aeromonas hydrophila, Morganella morganii, Providencia stuartii | | |
 | **Non-AmpC distractors** | E. coli, K. pneumoniae, K. oxytoca, C. koseri, P. mirabilis, P. penneri, E. faecalis, S. aureus, S. pneumoniae, E. faecium, Dumbo Octopus, Coral, Friendly Clam | | |
 
-Arsenal (3 weapons): **Ceftriaxone**, **Cefepime**, **Carbapenems**.
+Arsenal (3 weapons): **Ceftriaxone**, **Cefepime**, **Carbapenems**. Carbapenem's
+"Appropriate for" tag on the Weapons screen is now **HIGH RISK only** (2026-08-22) —
+it was previously flagged low-risk too, which contradicted the low-risk scoring rule
+below (L2-7: carbapenem is reserve/incorrect for low-risk).
 
 ---
 
@@ -109,11 +114,12 @@ are both accepted** (override of the case answer; Ceftriaxone ineffective).
 | L3-14 | Providencia | Bacteremia (urinary) | Catheter removed | 7 days | Ceftriaxone | | |
 | L3-15 | K. aerogenes | Bacteremia (biliary, ERCP) | Biliary drainage | 7 days | Cefepime | | |
 | L3-16 | K. aerogenes | Ventilator-assoc pneumonia | N/A | 7 days | Cefepime | | |
+| L3-17 | Morganella | Diabetic foot infection with osteomyelitis | Amputation declined by patient — no surgical source control | 6 weeks | Cefepime | ✅ applied 2026-08-22 | |
 
 ### Per-case rationale (the "correct choice" pop-up text — edit on the ✎ line)
 
 - **L3-1** "Serratia is low-risk AmpC; for non-obstructed pyelonephritis a 5-day course of Ceftriaxone is clinically appropriate — the low induction risk supports a narrow, short regimen." ✎ Change:
-- **L3-2** "Even for low-risk AmpC organisms, a 6-week endocarditis course raises the risk of de-repression under sustained cephalosporin pressure — Cefepime is safer for prolonged therapy." ✎ Change:
+- **L3-2** "Even for low-risk AmpC organisms, a 6-week endocarditis course raises the risk of de-repression under sustained cephalosporin pressure — Cefepime is safer for prolonged therapy. A carbapenem may also be reasonable to reserve for situations where Cefepime is not a good option for the patient." ✎ Change:
 - **L3-3** "Serratia bacteremia with catheter removal and no endovascular complication — low-risk AmpC with source control supports a 7-day Ceftriaxone course." ✎ Change:
 - **L3-4** "Enterobacter is HIGH-risk AmpC; clinical failures with Ceftriaxone in Enterobacter bacteremia are well-documented — Cefepime is strongly preferred regardless of source control." ✎ Change:
 - **L3-5** "High-risk AmpC + pulmonary infection with high bacterial burden — Cefepime is indicated; de-repression under third-generation cephalosporins is a real risk here." ✎ Change:
@@ -128,6 +134,7 @@ are both accepted** (override of the case answer; Ceftriaxone ineffective).
 - **L3-14** "Low-risk AmpC bacteremia with source control — a 7-day Ceftriaxone course is appropriate for urinary-source bacteremia; no indication for routine Cefepime escalation." ✎ Change:
 - **L3-15** "Klebsiella aerogenes shares the high-risk AmpC profile of Enterobacter — Cefepime is preferred for bacteremia even after source control." ✎ Change:
 - **L3-16** "High-risk AmpC VAP — Cefepime is strongly preferred; empiric Ceftriaxone in this setting risks clinical failure due to de-repression." ✎ Change:
+- **L3-17** "Morganella is low-risk AmpC, but a prolonged 6-week course with no surgical source control (amputation declined) raises the risk of AmpC de-repression under sustained cephalosporin pressure — Cefepime is the safer choice for extended therapy. A carbapenem may also be reasonable to reserve for situations where Cefepime is not a good option for the patient." ✎ Change:
 
 ---
 
@@ -135,8 +142,8 @@ are both accepted** (override of the case answer; Ceftriaxone ineffective).
 
 | # | Rule | Current behavior | Approved? | Change to / Notes |
 |---|---|---|---|---|
-| MUT-1 | Trigger | 3 inappropriate Ceftriaxone calls on the SAME high-risk organism type | | |
-| MUT-2 | Threshold | 3 (`MUTATION_THRESHOLD`) | | |
+| MUT-1 | Trigger | 2 inappropriate Ceftriaxone calls on the SAME high-risk organism type | ✅ applied 2026-08-22 | |
+| MUT-2 | Threshold | 2 (`MUTATION_THRESHOLD`) | ✅ applied 2026-08-22 | |
 | MUT-3 | Effect | Type flips to mutated form; **Ceftriaxone becomes ineffective**; Cefepime and a carbapenem are co-equal correct | | |
 | MUT-4 | Scope | Only high-risk AmpC types mutate; low-risk and distractors never mutate | | |
 
@@ -148,7 +155,7 @@ Each row is the exact heading + sentence shown after the shot. `{name}` = organi
 Edit on the **✎ Change:** line.
 
 - **Distractor + Release** → "Good call." / "This organism is not an AmpC producer — releasing it is the right stewardship move. Treat only what needs treating." ✎ Change:
-- **Distractor + any antibiotic** → "Unnecessary treatment." / "This reef organism did not need antibiotics. Good stewardship means not treating what you do not have to. {name} is not an AmpC producer." ✎ Change:
+- **Distractor + any antibiotic** → "Unnecessary treatment." / "While {name} can cause infections, it is not an AmpC producer and not the target of this game." ✎ Change: (updated 2026-08-22)
 - **SEACHYMP + Release** → "This one needed treatment." / "{name} is an AmpC-producing organism that required an antibiotic. Releasing it was not the right call here." ✎ Change:
 - **Mutated + Ceftriaxone** → "Ineffective against mutated form." / "This organism has adapted — ceftriaxone is no longer effective. Switch to Cefepime or a carbapenem." ✎ Change:
 - **Mutated + Cefepime _or_ Carbapenem** → "Correct — effective against the mutated form." / "{name} has de-repressed its AmpC. Cefepime and a carbapenem are both appropriate now — Ceftriaxone is no longer effective." ✎ Change:
@@ -163,7 +170,7 @@ Edit on the **✎ Change:** line.
 
 ## Pop-up feedback — LEVEL 3 (when a bug is SHOT in a case)
 
-- **Distractor + any antibiotic** → "Unnecessary treatment." / "{name} is not an AmpC-producing SEACHYMP organism. Good stewardship = not treating colonizers or bystanders." ✎ Change:
+- **Distractor + any antibiotic** → "Unnecessary treatment." / "While {name} can cause infections, it is not an AmpC producer and not the target of this game." ✎ Change: (updated 2026-08-22)
 - **Distractor + Release** → "Good call — no treatment needed." / "{name} is not an AmpC producer here. Releasing is correct — treat only what needs treating." ✎ Change:
 - **SEACHYMP + Release** → "This organism needed treatment." / "{name} is an AmpC-producing organism that required an antibiotic for this infection." ✎ Change:
 - **Mutated + Ceftriaxone** → "Ineffective against mutated form." / "This organism has adapted — ceftriaxone is no longer effective. Switch to Cefepime or a carbapenem." ✎ Change:
@@ -204,7 +211,7 @@ when the bug is caught (capture card); **teaching point** = the clinical note. E
 - Teaching: "Klebsiella aerogenes (formerly Enterobacter aerogenes) is HIGH-risk AmpC. Cefepime preferred over 3rd-gen cephalosporins for serious infections — though short courses for mild, uncomplicated infections may reasonably use Ceftriaxone in some cases. Bonus organism — not part of the classic SEACHYMP mnemonic." — ✎ Change:
 
 **Hafnia alvei** — `hafnia` · art: cowfish ⚠ blurb says "blobfish"
-- Catch blurb: "A purple blobfish with a perpetually sad face — ugly-cute and mostly harmless. Clinically: infrequent pathogen, but AmpC induction risk is variable enough to warrant Cefepime for serious infections." — ✎ Change:
+- Catch blurb: "A purple blobfish with a perpetually sad face — ugly-cute, but not to be underestimated. Clinically: infrequent pathogen, but AmpC induction risk is variable enough to warrant Cefepime for serious infections." — ✎ Change: (2026-08-22: removed "mostly harmless" — contradicted its HIGH-risk tier; the "blobfish vs. cowfish art" mismatch above is unchanged, still open)
 - Teaching: "Hafnia alvei is a HIGH-risk AmpC producer with variable induction risk. Cefepime is preferred over 3rd-gen cephalosporins for serious infections — though short courses for mild, uncomplicated infections may reasonably use Ceftriaxone in some cases." — ✎ Change:
 
 **Yersinia enterocolitica** — `yersinia` · art: hermit-crab
@@ -294,6 +301,41 @@ when the bug is caught (capture card); **teaching point** = the clinical note. E
 
 ## Global notes (free text — anything cross-cutting)
 
--
--
--
+- **2026-08-22 — "bonus organism" swap declined.** Owner considered moving the
+  "bonus" (9th, outside-the-mnemonic) designation from Klebsiella aerogenes to
+  Hafnia alvei, but Hafnia is one of the 8 core SEACHYMP letters (H = Hafnia) —
+  moving it out would leave letter H unrepresented. Owner chose to leave this as-is.
+  Klebsiella aerogenes remains the sole bonus organism. Do not re-litigate without
+  a new owner decision.
+- **2026-08-22 — per-level intro cards added.** Each level button on the Title
+  screen now opens a short goal + controls card (`LevelIntro.jsx`) before the level
+  starts, instead of going straight into gameplay. This is in addition to, not a
+  replacement for, the full How to Play page (still reachable from the Title screen
+  and the pause menu).
+- **2026-08-22 — controls simplified everywhere.** Clicking (computer) or tapping
+  (phone) an organism directly captures/shoots it in all three levels — swimming
+  there first was never required (`onClick`/`onTouchStart` hit-test the organism's
+  position directly, not the player's proximity). Removed all keyboard-swim
+  (arrow keys/WASD) and space-bar-capture instructions from `LevelIntro.jsx` and
+  `HowToPlay.jsx` since they describe an optional flourish, not the actual
+  mechanic. The keyboard/drag movement code itself was left in place — only the
+  instructions changed.
+- **2026-08-22 — `App.css` was never imported.** `main.jsx` only imported
+  `index.css`; the shared `.btn-back` style in `App.css` had zero effect on any
+  screen, so every "← Back" button across the app (Weapons, How to Play,
+  Encyclopedia, My Reef) was rendering as a bare, unstyled browser button — this
+  was the "back bar hard to click" bug. Fixed by adding `import "./App.css"` to
+  `main.jsx`, plus restyling `.btn-back` to a clearly clickable pill matching the
+  rest of the UI.
+- **2026-08-22 — Level 2/3 Menu button now pauses instead of instant-quitting.**
+  Previously only Level 1's HUD "Menu" button opened the "Paused" overlay
+  (Resume/How to Play/Encyclopedia/My Reef/Weapons/Main Menu); the identical-looking
+  button in Level 2 and 3 jumped straight to the Title screen with no confirmation
+  and no way back into the round. `App.jsx` now tracks which level opened the pause
+  menu (`pausedLevel`) so all three levels share the same pause/resume behavior.
+- **2026-08-22 — 9 organism sprites had a crop artifact.** A hard 2-4px fully-opaque
+  line along one edge (left or right) on `coconut-crab`, `hermit-crab`, `lionfish`,
+  `sand-dollar`, `sea-urchin`, `blue-dragon-nudibranch`, `manta-ray`, `pearl-oyster`,
+  `stingray` — a flood-fill leftover from the original master sheet crop. Cleaned
+  by clearing those columns to transparent in `public/art/organisms/*.webp`
+  (lossless re-save, same dimensions).
