@@ -16,7 +16,7 @@ export const WEAPONS = [
     cue: "Good enough for many situations.",
     appropriateFor: ["low"],
     description:
-      "A medium-range launcher that fires friendly blue bubbles. Effective for low-risk AmpC organisms. Using this against high-risk AmpC organisms may select for resistance.",
+      "A medium-range launcher that fires friendly blue bubbles. Effective for low-risk AmpC organisms. Using this agent against high-risk AmpC organisms, or prolonged courses for low-risk AmpC organisms, may select for resistance.",
   },
   {
     id: "cefepime",
@@ -28,7 +28,7 @@ export const WEAPONS = [
     cue: "Preferred for higher-risk AmpC.",
     appropriateFor: ["high", "low"],
     description:
-      "A purple-glowing electric harpoon — more powerful than Ceftriaxone, with better stability against inducible AmpC. Preferred for Enterobacter, Citrobacter freundii, and K. aerogenes.",
+      "A purple-glowing electric harpoon — more powerful than Ceftriaxone, with better stability against inducible AmpC. Preferred for Enterobacter, Citrobacter freundii, Hafnia, Yersinia, and K. aerogenes. Also worth considering for a low-risk AmpC organism when a prolonged course of treatment is needed.",
   },
   {
     id: "carbapenem",
@@ -38,7 +38,7 @@ export const WEAPONS = [
     color: "#f59e0b",
     emoji: "⚓",
     cue: "Use only when truly needed.",
-    appropriateFor: ["high", "low"],
+    appropriateFor: ["high"],
     description:
       "A massive golden anchor launcher — the heaviest weapon in the arsenal. Reserve for mutated AmpC organisms resistant to Cefepime, and for ESBL producers. Good stewardship means using this sparingly.",
   },

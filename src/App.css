@@ -3,16 +3,18 @@
 /* Shared back button used across screens */
 .btn-back {
   align-self: flex-start;
-  background: transparent;
-  color: var(--text-muted);
+  background: var(--bg-card);
+  color: var(--text);
+  font-weight: 600;
   font-size: 0.9rem;
-  padding: 8px 12px;
+  padding: 10px 16px;
   border: 1px solid var(--border);
   border-radius: var(--rads);
   margin-bottom: 4px;
+  min-height: var(--tap-min);
 }
 
 .btn-back:hover {
-  color: var(--text);
+  background: var(--bg-card-hover);
   border-color: var(--accent);
 }

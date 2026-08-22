@@ -38,8 +38,7 @@ export function classifyChoice(org, weaponId, mutated) {
       status: "overtreatment",
       heading: "Unnecessary treatment.",
       feedback:
-        "This reef organism did not need antibiotics. Good stewardship means not treating what you do not have to. " +
-        org.name + " is not an AmpC producer.",
+        "While " + org.name + " can cause infections, it is not an AmpC producer and not the target of this game.",
       isCorrect: false,
     };
   }

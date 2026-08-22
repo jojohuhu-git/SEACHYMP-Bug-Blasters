@@ -20,7 +20,7 @@
  */
 
 // TODO: sound — play an ominous mutation sound here
-export const MUTATION_THRESHOLD = 3; // incorrect handlings of SAME TYPE before mutation
+export const MUTATION_THRESHOLD = 2; // incorrect handlings of SAME TYPE before mutation
 
 /** Weapons that are INEFFECTIVE against a mutated organism */
 export const INEFFECTIVE_ON_MUTATED = ["ceftriaxone"];

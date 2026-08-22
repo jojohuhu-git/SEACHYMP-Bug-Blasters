@@ -36,8 +36,8 @@ export default function HowToPlay({ onBack }) {
               { letter: "E", org: "Enterobacter cloacae", risk: "HIGH" },
               { letter: "A", org: "Aeromonas", risk: "low" },
               { letter: "C", org: "Citrobacter freundii", risk: "HIGH" },
-              { letter: "H", org: "Hafnia alvei", risk: "low" },
-              { letter: "Y", org: "Yersinia enterocolitica", risk: "low" },
+              { letter: "H", org: "Hafnia alvei", risk: "HIGH" },
+              { letter: "Y", org: "Yersinia enterocolitica", risk: "HIGH" },
               { letter: "M", org: "Morganella morganii", risk: "low" },
               { letter: "P", org: "Providencia", risk: "low" },
             ].map(({ letter, org, risk }) => (
@@ -73,24 +73,10 @@ export default function HowToPlay({ onBack }) {
         {/* Controls */}
         <section className="htp-section">
           <h2>Controls</h2>
-          <div className="htp-controls-grid">
-            <div className="htp-control-block">
-              <h3>Keyboard</h3>
-              <ul>
-                <li><kbd>Arrow keys</kbd> or <kbd>W A S D</kbd> — swim</li>
-                <li><kbd>Space</kbd> or <kbd>E</kbd> — capture nearby organism</li>
-                <li><kbd>Esc</kbd> — close info card / menu</li>
-              </ul>
-            </div>
-            <div className="htp-control-block">
-              <h3>Touch / Mouse</h3>
-              <ul>
-                <li><strong>Drag</strong> on the ocean — swim toward drag direction</li>
-                <li><strong>Tap / Click</strong> an organism — capture it</li>
-                <li>Tap the <strong>× button</strong> — close info card</li>
-              </ul>
-            </div>
-          </div>
+          <ul className="htp-ul">
+            <li><strong>Click</strong> (computer) or <strong>tap</strong> (phone) an organism to catch it</li>
+            <li><kbd>Esc</kbd> or the <strong>× button</strong> — close the info card or menu</li>
+          </ul>
         </section>
 
         {/* Capture & Info Card */}
@@ -120,14 +106,14 @@ export default function HowToPlay({ onBack }) {
           <div className="htp-rule-box htp-rule-high">
             <strong>HIGH-RISK AmpC</strong>
             <br />
-            Enterobacter cloacae, Citrobacter freundii, Klebsiella aerogenes
+            Enterobacter cloacae, Citrobacter freundii, Hafnia alvei, Yersinia enterocolitica, Klebsiella aerogenes
             <br />
             <span>Prefer <strong>Cefepime</strong> (4th-gen) over 3rd-gen cephalosporins for serious infections</span>
           </div>
           <div className="htp-rule-box htp-rule-low">
             <strong>LOW-RISK AmpC</strong>
             <br />
-            Serratia, Aeromonas, Hafnia, Yersinia, Morganella, Providencia
+            Serratia, Aeromonas, Morganella, Providencia
             <br />
             <span><strong>Ceftriaxone</strong> is often acceptable, but context matters (infection type, source control, duration)</span>
           </div>
