@@ -97,8 +97,11 @@ export default function InfoCard({ org, mutated, onDecide, onClose, alreadyInEnc
           )}
         </div>
 
-        {/* Actions */}
-        {alreadyInEncyclopedia || decision !== null ? (
+        {/* Actions — always ask, even for organisms already in the Encyclopedia;
+            skipping the question for known organisms meant a returning player
+            could never score (or complete a patrol) once they'd seen every
+            SEACHYMP type once. The "In Encyclopedia" tag above still shows. */}
+        {decision !== null ? (
           <div className="info-actions info-actions--done">
             <button className="btn-secondary info-close-btn" onClick={onClose}>
               Continue
