@@ -410,12 +410,12 @@ export default function Level3Scene({ chymp, onMenu }) {
   const pendingRevealRef = useRef(null);
 
   const [mutationBanner, setMutationBanner] = useState(null);
-  const [identified, setIdentified] = useState(
-    () => GameState.getProgress().identifiedCount
-  );
-  const [reefStage, setReefStage] = useState(
-    () => getReefStage(GameState.getProgress().identifiedCount)
-  );
+  // Reef growth is scoped to THIS level visit — it always starts barren and
+  // grows with correct calls made this session, so returning players see it
+  // progress again instead of finding it permanently maxed out. Lifetime
+  // totals (badges, My Reef screen) still read from GameState, untouched.
+  const [identified, setIdentified] = useState(0);
+  const [reefStage, setReefStage] = useState(() => getReefStage(0));
   const [missionComplete, setMissionComplete] = useState(false);
   const pendingCompleteRef = useRef(false);
 
@@ -444,7 +444,7 @@ export default function Level3Scene({ chymp, onMenu }) {
       w,
       h,
       shots: [],
-      reefStageIdx: reefStageIdxFor(GameState.getProgress().identifiedCount),
+      reefStageIdx: 0, // session-scoped reef always starts barren
       reefBloom: null,
     };
   }
@@ -809,8 +809,11 @@ export default function Level3Scene({ chymp, onMenu }) {
     if (result.isCorrect) {
       GameState.addToEncyclopedia(org.id);
       const prog = GameState.incrementIdentified();
-      setIdentified(prog.identifiedCount);
-      setReefStage(getReefStage(prog.identifiedCount));
+      setIdentified((n) => {
+        const next = n + 1;
+        setReefStage(getReefStage(next));
+        return next;
+      });
 
       if (prog.identifiedCount === 1) GameState.awardBadge("ampC_apprentice");
 

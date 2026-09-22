@@ -121,8 +121,12 @@ export default function Level1Scene({ chymp, onMenu }) {
   const [capturedOrg, setCapturedOrg] = useState(null);   // info card open
   const [capturedOrgMutated, setCapturedOrgMutated] = useState(false); // mutated snapshot at capture time
   const [mutationBanner, setMutationBanner] = useState(null); // banner text
-  const [identified, setIdentified] = useState(() => GameState.getProgress().identifiedCount);
-  const [reefStage, setReefStage] = useState(() => getReefStage(GameState.getProgress().identifiedCount));
+  // Reef growth is scoped to THIS level visit — it always starts barren and
+  // grows with correct IDs made this session, so returning players see it
+  // progress again instead of finding it permanently maxed out. Lifetime
+  // totals (badges, My Reef screen) still read from GameState, untouched.
+  const [identified, setIdentified] = useState(0);
+  const [reefStage, setReefStage] = useState(() => getReefStage(0));
   // Track which SEACHYMP target ids have been correctly identified this patrol
   // (stored via GameState; no React re-render needed for this set)
   const identifiedTargetsRef = useRef(GameState.getIdentifiedTargets());
@@ -141,7 +145,7 @@ export default function Level1Scene({ chymp, onMenu }) {
       touch: { active: false, lastX: 0, lastY: 0 },
       tick: 0,
       pose: null, // active Captain pose (the capture net) — see playerRenderer.js
-      reefStageIdx: reefStageIdxFor(GameState.getProgress().identifiedCount),
+      reefStageIdx: 0, // session-scoped reef always starts barren
       reefBloom: null, // reef stage-advance flourish — see reefRenderer.js
       w,
       h,
@@ -423,8 +427,13 @@ export default function Level1Scene({ chymp, onMenu }) {
       const prog = org.isSeachymp
         ? GameState.incrementIdentified()
         : GameState.incrementIgnored();
-      setIdentified(prog.identifiedCount);
-      setReefStage(getReefStage(prog.identifiedCount));
+      if (org.isSeachymp) {
+        setIdentified((n) => {
+          const next = n + 1;
+          setReefStage(getReefStage(next));
+          return next;
+        });
+      }
 
       // Badge checks
       if (prog.identifiedCount === 1) GameState.awardBadge("ampC_apprentice");
